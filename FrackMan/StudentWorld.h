@@ -9,16 +9,11 @@
 using namespace std;
 
 // Students:  Add code to this file, StudentWorld.cpp, Actor.h, and Actor.cpp
-
+class Actor;
 class StudentWorld : public GameWorld
 {
 public:
-	StudentWorld(std::string assetDir)
-	 : GameWorld(assetDir)
-	{
-        currentLevel = getLevel();
-        
-	}
+    StudentWorld(std::string assetDir) ; //constructor
 
     /*initialize the game
      *  intialize all the data structures required for the game
@@ -29,31 +24,23 @@ public:
      *  create a 2D array of pointers for Dirt
      *
      */
-	virtual int init()
-	{
-		return GWSTATUS_CONTINUE_GAME;
-	}
+    virtual int init();
 
     //run a single tick of the game
-	virtual int move()
-	{
-		  // This code is here merely to allow the game to build, run, and terminate after you hit enter a few times.
-		  // Notice that the return value GWSTATUS_PLAYER_DIED will cause our framework to end the current level.
-		decLives();
-		return GWSTATUS_PLAYER_DIED;
-	}
+    virtual int move();
 
     //called when player dies due to his health reaching 0 or a boulder falling on him
     
-	virtual void cleanUp()
-	{
-        
-	}
+    virtual void cleanUp();
+    
+    //remove dirt from these coordinates
+    void removeDirt(int startX, int startY, int endX, int endY);
 
+    virtual ~StudentWorld();
 private:
     int currentLevel;
-    GraphObject* frackManPointer;
-    GraphObject* dirtArray[60][60];
+    Actor* frackManPointer;
+    Actor* dirtArray[60][60];
 };
 
 #endif // STUDENTWORLD_H_

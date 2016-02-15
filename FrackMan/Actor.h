@@ -29,7 +29,7 @@ public:
 class FrackMan: public Actor
 {
 public:
-    FrackMan();
+    FrackMan(int x, int y);
     virtual void doSomething();
     int getHitPoints()      { return hitPoints;}
     int getSquirtsLeft()    { return squirtUnits; }

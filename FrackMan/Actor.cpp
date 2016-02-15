@@ -34,8 +34,8 @@ void Dirt::doSomething()
 }
 
 //frackMan constructor and methods
-FrackMan::FrackMan()
-:Actor(IID_PLAYER, 29, 59, right, 1.0, 0)
+FrackMan::FrackMan(int x, int y)
+:Actor(IID_PLAYER, x,y, right, 1.0, 0)
 {
     m_direction = right;
     hitPoints = 10;
