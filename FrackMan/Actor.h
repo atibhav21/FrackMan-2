@@ -35,15 +35,16 @@ public:
     int getSquirtsLeft()    { return squirtUnits; }
     int getSonarCharges()   { return sonarCharges;}
     int getGold()           { return goldNuggets; }
-    Direction getDirection(){ return m_direction;}
+    void pressKey(int key);
+    /*void setMovePending(bool x);
+    bool getMovePending();*/
 
 private:
-    Direction m_direction;
     int hitPoints;
     int squirtUnits;
     int sonarCharges;
     int goldNuggets;
-    StudentWorld* m_StudentWorld;
+    bool movePending;
 };
 
 #endif // ACTOR_H_

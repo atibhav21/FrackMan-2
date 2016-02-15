@@ -9,7 +9,8 @@
 using namespace std;
 
 // Students:  Add code to this file, StudentWorld.cpp, Actor.h, and Actor.cpp
-class Actor;
+class FrackMan;
+class Dirt;
 class StudentWorld : public GameWorld
 {
 public:
@@ -39,8 +40,8 @@ public:
     virtual ~StudentWorld();
 private:
     int currentLevel;
-    Actor* frackManPointer;
-    Actor* dirtArray[60][60];
+    FrackMan* frackManPointer;
+    Dirt* dirtArray[VIEW_WIDTH][VIEW_HEIGHT-4];
 };
 
 #endif // STUDENTWORLD_H_
