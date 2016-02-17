@@ -26,15 +26,16 @@ StudentWorld::StudentWorld(string assetDir)
  */
 int StudentWorld::init()
 {
-    frackManPointer = new FrackMan(30, 60);
+    frackManPointer = new FrackMan(30,60);
     for(int i = 0; i<VIEW_WIDTH; i++) //x direction
     {
         for(int j = 0; j<VIEW_HEIGHT-4; j++) //y direction
         {
             dirtArray[i][j] = new Dirt(i, j);
-            if(i < 30 || i > 33) //creates a shaft at x values between 30 and 33
+            if(i < 30 || i > 33 ||  j<4) //creates a shaft at x values between 30 and 33
             {
-                dirtArray[i][j]->setVisible(true);
+                    dirtArray[i][j]->setVisible(true);
+                
             }
             else
             {

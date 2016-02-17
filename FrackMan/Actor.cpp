@@ -21,6 +21,8 @@ void Actor::setAlive(bool value)
     m_isAlive = value;
 }
 
+
+
 //dirt constructor
 Dirt::Dirt(int x, int y)
             :Actor(IID_DIRT, x, y, right, 0.25, 3)
@@ -97,24 +99,56 @@ void FrackMan::doSomething()
         if(movePending == true)
         {
             
-            if(directionToMoveIn == down && y!= 0)
+            if(directionToMoveIn == down)
             {
-                moveTo(x, y-1);
+                if(y!= 0)
+                {
+                    moveTo(x, y-1);
+                   
+                }
+                else
+                {
+                    moveTo(x, y);
+                   
+                }
                 movePending = false;
             }
-            else if(directionToMoveIn == up && y!= 60)
+            else if(directionToMoveIn == up )
             {
-                moveTo(x , y+1);
+                if(y!= 60)
+                {
+                    moveTo(x , y+1);
+                    
+                }
+                else
+                {
+                    moveTo(x, y);
+                    
+                }
                 movePending = false;
             }
-            else if(directionToMoveIn == left && x!= 0)
+            else if(directionToMoveIn == left)
             {
-                moveTo(x-1, y);
+                if(x!= 0)
+                {
+                    moveTo(x-1, y);
+                }
+                else
+                {
+                    moveTo(x, y);
+                }
                 movePending = false;
             }
-            else if(directionToMoveIn == right && x!= 60)
+            else if(directionToMoveIn == right)
             {
-                moveTo(x+1, y);
+                if(x!= 60)
+                {
+                    moveTo(x+1, y);
+                }
+                else
+                {
+                    moveTo(x, y);
+                }
                 movePending = false;
             }
             

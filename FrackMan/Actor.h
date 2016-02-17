@@ -14,6 +14,7 @@ public:
     virtual void doSomething() = 0;
     virtual bool isAlive();
     void setAlive(bool value);
+    virtual ~Actor() {}
 private:
     bool m_isAlive;
 };
