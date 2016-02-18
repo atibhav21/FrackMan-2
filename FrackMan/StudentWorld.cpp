@@ -75,6 +75,8 @@ int StudentWorld::move()
     // This code is here merely to allow the game to build, run, and terminate after you hit enter a few times.
     // Notice that the return value GWSTATUS_PLAYER_DIED will cause our framework to end the current level.
     
+    
+    
     //do something with FrackMan
     int keyPressed;
     getKey(keyPressed);
@@ -83,6 +85,9 @@ int StudentWorld::move()
     int frackX = frackManPointer->getX();
     int frackY = frackManPointer->getY();
     removeDirt(frackX, frackY, frackX+3, frackY+3);
+    
+    
+    
     
     return GWSTATUS_CONTINUE_GAME;
     /*decLives();

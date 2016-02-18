@@ -9,8 +9,6 @@
 using namespace std;
 
 // Students:  Add code to this file, StudentWorld.cpp, Actor.h, and Actor.cpp
-class FrackMan;
-class Dirt;
 class StudentWorld : public GameWorld
 {
 public:
@@ -40,6 +38,8 @@ public:
     virtual ~StudentWorld();
 private:
     int currentLevel;
+    vector<Actor*> objects;
+    vector<Actor*>::iterator objectIterator;
     FrackMan* frackManPointer;
     Dirt* dirtArray[VIEW_WIDTH][VIEW_HEIGHT-4];
 };

@@ -1,5 +1,6 @@
 #include "Actor.h"
 #include "StudentWorld.h"
+#include <algorithm>
 
 // Students:  Add code to this file (if you wish), Actor.h, StudentWorld.h, and StudentWorld.cpp
 
@@ -23,7 +24,7 @@ void Actor::setAlive(bool value)
 
 
 
-//dirt constructor
+//dirt Class
 Dirt::Dirt(int x, int y)
             :Actor(IID_DIRT, x, y, right, 0.25, 3)
 {
@@ -33,6 +34,127 @@ Dirt::Dirt(int x, int y)
 void Dirt::doSomething()
 {
     
+    
+}
+
+//Goodie Class
+Goodie::Goodie(int ImageID, int x, int y, Direction dir, double size, unsigned int depth, FrackMan* fm)
+:Actor(ImageID, x, y, dir, size, depth)
+{
+    FMP = fm;
+}
+
+FrackMan* Goodie::getFrackMan()
+{
+    return FMP;
+}
+
+/*  pickUpAble should be true always for Sonar Kit and Water Pool
+ *  TODO: Change possibly to int return type with 0 for pickedUp by frackMan, 1 for protestors, 2 for sunk in
+ *        ground, 3 for nugget distance <= 4.0, 4 if object is not alive, -1 if none of the above is valid
+ */
+int Goodie::activate(bool pickUpAble)
+{
+    if(isAlive() == false)
+    {
+        return 4;
+    }
+    double distance = sqrt( (FMP->getX()-getX())^2 + (FMP->getY()-getY())^2 );
+    if(isVisible() == false && distance<=4.0)
+    {
+        setVisible(true);
+        return 3;
+    }
+    else if(pickUpAble == true && distance<=3.0)
+    {
+        setAlive(false);
+        return 0;
+    }
+    
+    return -1;
+}
+
+
+
+//Gold Nugget Class
+GoldNugget::GoldNugget(int x, int y, bool visibility, bool pickableByFrackMan, bool permState, FrackMan* fm)
+:Goodie(IID_GOLD, x, y, right, 1.0, 2, fm)
+{
+    m_pickable = pickableByFrackMan;
+    m_permState = permState;
+    setVisible(visibility);
+    
+}
+
+void GoldNugget::doSomething()
+{
+    if(isAlive() == false)
+    {
+        return;
+    }
+
+}
+
+//Sonar Kit Class
+SonarKit::SonarKit(int x, int y, int level, FrackMan* fm)
+:Goodie(IID_SONAR, x, y, right, 1.0, 2, fm)
+{
+    setVisible(true);
+    tickCount = max(100, 300 - (10* level) );
+}
+
+
+//TODO: play sound for x == 0
+void SonarKit::doSomething()
+{
+    
+    int x = activate(true);
+    if(x == 4)
+    {
+        return;
+    }
+    if(x == 0)
+    {
+        getFrackMan()->setSonarCharges(2); //TODO: check if 2 is the correct amount or not
+        getFrackMan()->changePoints(75);
+    }
+    tickCount--;
+    if(tickCount <= 0)
+    {
+        setAlive(false);
+        setVisible(false);
+        return;
+    }
+    
+}
+
+//Water Pool Class
+WaterPool::WaterPool(int x, int y, int level, FrackMan* fm)
+:Goodie(IID_WATER_POOL, x, y, right, 1.0, 2, fm)
+{
+    setVisible(true);
+    tickCount = max(100, 300 - (10*level) );
+}
+
+void WaterPool::doSomething()
+{
+    int x = activate(true);
+    if(x == 4)
+    {
+        return;
+    }
+    if(x == 0)
+    {
+        getFrackMan()->setSquirts(5);
+        getFrackMan()->changePoints(100);
+    }
+    tickCount--;
+    if(tickCount <= 0)
+    {
+        setAlive(false);
+        setVisible(false);
+        return;
+    }
 }
 
 //frackMan constructor and methods
@@ -84,6 +206,7 @@ bool FrackMan::getMovePending()
 {
     return movePending;
 }*/
+
 
 void FrackMan::doSomething()
 {
