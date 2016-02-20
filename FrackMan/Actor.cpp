@@ -48,6 +48,54 @@ Protestor::Protestor()
     
 }*/
 
+//Squirt Class
+Squirt::Squirt(int x, int y, StudentWorld* sw, Direction dir)
+:Actor(IID_WATER_SPURT, x, y, sw, dir, 1.0 , 1)
+{
+    travelDistance = 4;
+    setVisible(true);
+    setAlive(true);
+}
+
+void Squirt::doSomething()
+{
+    if(isAlive() == false)
+    {
+        return;
+    }
+    if(travelDistance == 0)
+    {
+        setVisible(false);
+        setAlive(false);
+        return;
+    }
+    //TODO: Check for protestor, dirt and boulder and edge of grid
+    
+    switch (getDirection()) {
+        case left:
+            moveTo(getX()-1, getY());
+            travelDistance--;
+            break;
+        case right:
+            moveTo(getX()+1, getY());
+            travelDistance--;
+            break;
+        case up:
+            moveTo(getX(), getY()+1);
+            travelDistance--;
+            break;
+        case down:
+            moveTo(getX(), getY()-1);
+            travelDistance--;
+            break;
+        default:
+            cerr<<"FUCK THIS BUG"<<endl;
+            break;
+    }
+    
+    
+}
+
 //Goodie Class
 Goodie::Goodie(int ImageID, int x, int y, StudentWorld* sw, Direction dir, double size, unsigned int depth, FrackMan* fm)
 :Actor(ImageID, x, y, sw, dir, size, depth)
@@ -206,6 +254,12 @@ FrackMan::FrackMan(int x, int y, StudentWorld* sw)
     setAlive(true); //frackman is alive when it is created
 }
 
+void FrackMan::useSonar()
+{
+    sonarCharges--;
+    getStudentWorld()->sonarChargeUsed();
+}
+
 void FrackMan::pressKey(int key)
 {
     movePending = true;
@@ -228,6 +282,35 @@ void FrackMan::pressKey(int key)
     else
     {
         movePending = false;
+    }
+    
+    if(key == 'Z' || key == 'z')
+    {
+        if(getSonarCharges()>0)
+        {
+            useSonar();
+        }
+    }
+    else if(key == KEY_PRESS_SPACE)
+    {
+        squirtUnits--;
+        if(getDirection() == left)
+        {
+            getStudentWorld()->squirtUsed("left");
+        }
+        else if(getDirection() == right)
+        {
+            getStudentWorld()->squirtUsed("right");
+        }
+        else if(getDirection() == up)
+        {
+            getStudentWorld()->squirtUsed("up");
+        }
+        else
+        {
+            getStudentWorld()->squirtUsed("down");
+        }
+        
     }
 }
 

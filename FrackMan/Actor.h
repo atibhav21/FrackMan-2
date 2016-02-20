@@ -39,6 +39,7 @@ public:
     int getHealth()                 { return health; }
     void decHealth()                { health = health - 20; }
     void pressKey(int key);
+    void useSonar();
     /*void setMovePending(bool x);
      bool getMovePending();*/
     virtual ~FrackMan() {}
@@ -53,11 +54,23 @@ private:
     bool movePending;
 };
 
-class Protestor: public Actor
+class Squirt: public Actor
 {
 public:
-    Protestor();
+    Squirt(int x, int y, StudentWorld* sw, Direction dir);
     virtual void doSomething();
+    int getTravelDistance()     {return travelDistance; }
+    ~Squirt()                   {}
+private:
+    int travelDistance;
+};
+
+class Protester: public Actor
+{
+public:
+    Protester();
+    virtual void doSomething();
+    virtual ~Protester();
 private:
     int health;
 };

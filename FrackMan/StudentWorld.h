@@ -58,6 +58,12 @@ public:
     //move the frackman
     void moveFrackman();
     
+    //use a sonar charge
+    void sonarChargeUsed();
+    
+    //use a squirt
+    void squirtUsed(string direction);
+    
     //remove all the dead objects after a single tick
     void removeDeadGameObjects();
     
@@ -71,7 +77,6 @@ private:
     vector<Actor*>::iterator objectIterator;
     FrackMan* frackManPointer;
     Dirt* dirtArray[VIEW_WIDTH][VIEW_HEIGHT-4];
-    char objectPositions[VIEW_WIDTH][VIEW_HEIGHT];
 };
 
 #endif // STUDENTWORLD_H_

@@ -13,15 +13,9 @@ GameWorld* createStudentWorld(string assetDir)
 StudentWorld::StudentWorld(string assetDir)
 :GameWorld(assetDir)
 {
-    currentLevel = 0;
+    currentLevel = getLevel();
     objectIterator = objects.begin();
-    for(int i = 0; i<VIEW_WIDTH; i++)
-    {
-        for(int j = 0; j<VIEW_HEIGHT-4; j++)
-        {
-            objectPositions[i][j] = '.'; //if contains X then object present at location
-        }
-    }
+    
 }
 
 /*  initialize the game
@@ -35,6 +29,7 @@ StudentWorld::StudentWorld(string assetDir)
  */
 int StudentWorld::init()
 {
+    currentLevel = getLevel();
     frackManPointer = new FrackMan(30,60, this);
     for(int i = 0; i<VIEW_WIDTH; i++) //x direction
     {
@@ -117,7 +112,6 @@ void StudentWorld::addNewItem()
         {
             Actor* newItem = new SonarKit(0, 60, this, currentLevel, frackManPointer);
             objects.push_back(newItem);
-            objectPositions[0][60] = 'X';
         }
         else
         {
@@ -130,7 +124,6 @@ void StudentWorld::addNewItem()
             }while(noDirt(x, y) == false);*/
             
             findCoordinates(x, y, false);
-            objectPositions[x][y] = 'X';
             
             Actor* newItem = new WaterPool(x, y, this, currentLevel, frackManPointer);
             objects.push_back(newItem);
@@ -144,7 +137,6 @@ void StudentWorld::removeDeadGameObjects()
     {
         if(objects[i]->isAlive() == false)
         {
-            objectPositions[objects[i]->getX()][objects[i]->getY()] = '.';
             delete objects[i];
             objects.erase(objects.begin()+ i);
             i--; //do not increment i since next object is moved up
@@ -154,19 +146,25 @@ void StudentWorld::removeDeadGameObjects()
 
 bool StudentWorld::checkEucDistance(int x, int y)
 {
-    
+    for(vector<Actor*>::iterator i = objects.begin(); i!= objects.end(); i++)
+    {
+        if(distance((*i)->getX(), (*i)->getY(), frackManPointer->getX(), frackManPointer->getY()) <= 6.0)
+        {
+            return false;
+        }
+    }
     return true;
 }
 
+//find empty coordinates according to the spec
 void StudentWorld::findCoordinates(int &x, int &y, bool dirtPresent)
 {
-    //TODO: maybe keep an additional 2D array which marks where objects are. improve checkEucDistance efficiency
     do
     {
-        x = rand()%VIEW_WIDTH;
+        x = rand()%(VIEW_WIDTH-4);
         y = rand()% (VIEW_HEIGHT - 4);
         
-    }while(noDirt(x, y) == dirtPresent);// && checkEucDistance(x, y) == false);
+    }while(noDirt(x, y) == dirtPresent || checkEucDistance(x, y) == false);
 }
 
 //add a barrel to the game
@@ -193,6 +191,44 @@ void StudentWorld::moveFrackman()
     removeDirt(frackX, frackY, frackX+3, frackY+3);
 }
 
+void StudentWorld::sonarChargeUsed()
+{
+    playSound(SOUND_SONAR);
+    for(vector<Actor*>::iterator i = objects.begin(); i!= objects.end(); i++)
+    {
+        if(distance((*i)->getX(), (*i)->getY(), frackManPointer->getX(), frackManPointer->getY()) <= 12.0)
+        {
+            (*i)->setVisible(true);
+            cerr<<"Set visible by sonar"<<endl;
+        }
+    }
+}
+
+void StudentWorld::squirtUsed(string direction)
+{
+    //TODO: CHECK FOR CORRECT INITIALIZATION POSITION
+    playSound(SOUND_PLAYER_SQUIRT);
+    Actor* newSquirt;
+    if(direction == "left")
+    {
+        newSquirt = new Squirt(frackManPointer->getX(), frackManPointer->getY(),this, frackManPointer->getDirection());
+        
+    }
+    else if(direction == "right")
+    {
+        newSquirt = new Squirt(frackManPointer->getX()+4, frackManPointer->getY(), this, frackManPointer->getDirection());
+    }
+    else if(direction == "up")
+    {
+        newSquirt = new Squirt(frackManPointer->getX(), frackManPointer->getY()+4, this, frackManPointer->getDirection());
+    }
+    else
+    {
+        newSquirt = new Squirt(frackManPointer->getX(), frackManPointer->getY(), this, frackManPointer->getDirection());
+    }
+    objects.push_back(newSquirt);
+}
+
 int StudentWorld::move()
 {
     // This code is here merely to allow the game to build, run, and terminate after you hit enter a few times.
@@ -205,7 +241,7 @@ int StudentWorld::move()
         {
             objects[i]->doSomething();
             
-            /*if(frackManPointer->isAlive() == false)
+            if(frackManPointer->isAlive() == false)
             {
                 decLives();
                 return GWSTATUS_PLAYER_DIED;
@@ -214,7 +250,7 @@ int StudentWorld::move()
             {
                 playSound(SOUND_FINISHED_LEVEL);
                 return GWSTATUS_FINISHED_LEVEL;
-            }*/ //TODO: Correct Code but check for new level creation bug
+            }
 
         }
     }
@@ -222,7 +258,7 @@ int StudentWorld::move()
     
     removeDeadGameObjects();
     
-    /*if(frackManPointer->isAlive() == false)
+    if(frackManPointer->isAlive() == false)
     {
         decLives();
         return GWSTATUS_PLAYER_DIED;
@@ -231,7 +267,7 @@ int StudentWorld::move()
     {
         playSound(SOUND_FINISHED_LEVEL);
         return GWSTATUS_FINISHED_LEVEL;
-    }*/ //TODO: Correct Code but check for new level creation bug
+    }
     
     return GWSTATUS_CONTINUE_GAME;
     /*decLives();
@@ -257,10 +293,9 @@ void StudentWorld::cleanUp()
     }*/
     for(int i = 0; i<objects.size(); i++)
     {
-        if(objects[i]->isAlive() == false)
-        {
-            delete objects[i];
-        }
+        delete objects[i];
+        objects.erase(objects.begin()+i);
+        i--;
     }
     delete frackManPointer;
 }
@@ -279,6 +314,8 @@ StudentWorld::~StudentWorld()
         if(objects[i]->isAlive() == false)
         {
             delete objects[i];
+            objects.erase(objects.begin()+i);
+            i--;
         }
     }
     delete frackManPointer;
