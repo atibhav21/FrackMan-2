@@ -2,35 +2,42 @@
 #define ACTOR_H_
 
 #include "GraphObject.h"
+#include "StudentWorld.h"
+
 
 // Students:  Add code to this file, Actor.cpp, StudentWorld.h, and StudentWorld.cpp
+
+class StudentWorld;
 
 class Actor: public GraphObject
 {
 public:
-    Actor(int imageID, int startX, int startY, Direction dir = right, double size = 1.0, unsigned int depth = 0);
+    Actor(int imageID, int startX, int startY,  StudentWorld* sw, Direction dir = right, double size = 1.0, unsigned int depth = 0);
     virtual void doSomething() = 0;
     virtual bool isAlive();
     void setAlive(bool value);
+    StudentWorld* getStudentWorld();
     virtual ~Actor() {}
 private:
     bool m_isAlive;
+    StudentWorld* studentWorld;
 };
 
 class FrackMan: public Actor
 {
 public:
-    FrackMan(int x, int y);
+    FrackMan(int x, int y, StudentWorld* sw);
     virtual void doSomething();
-    int getHitPoints()      { return hitPoints;}
-    void setHitPoints(int amt) { hitPoints += amt; }
-    int getSquirtsLeft()    { return squirtUnits; }
-    void setSquirts(int amt) { squirtUnits += amt; }
-    int getSonarCharges()   { return sonarCharges;}
-    void setSonarCharges(int amt) {sonarCharges += amt; }
-    int getGold()           { return goldNuggets; }
-    void setGold(int amt) {goldNuggets += amt; }
-    void changePoints(int amt) { points+= amt; }
+    int getHitPoints()              { return hitPoints;}
+    void setHitPoints(int amt)      { hitPoints += amt; }
+    int getSquirtsLeft()            { return squirtUnits; }
+    void setSquirts(int amt)        { squirtUnits += amt; }
+    int getSonarCharges()           { return sonarCharges;}
+    void setSonarCharges(int amt)   {sonarCharges += amt; }
+    int getGold()                   { return goldNuggets; }
+    void setGold(int amt)           {goldNuggets += amt; }
+    int getHealth()                 { return health; }
+    void decHealth()                { health = health - 20; }
     void pressKey(int key);
     /*void setMovePending(bool x);
      bool getMovePending();*/
@@ -42,16 +49,24 @@ private:
     int sonarCharges;
     int goldNuggets;
     int points;
+    int health;
     bool movePending;
 };
 
-
+class Protestor: public Actor
+{
+public:
+    Protestor();
+    virtual void doSomething();
+private:
+    int health;
+};
 
 class Dirt: public Actor
 {
     
 public:
-    Dirt(int x, int y);
+    Dirt(int x, int y, StudentWorld* sw);
     virtual void doSomething();
     ~Dirt() {}
 };
@@ -59,9 +74,9 @@ public:
 class Goodie: public Actor
 {
 public:
-    Goodie(int imageID, int x, int y, Direction dir, double size, unsigned int depth, FrackMan* fm);
+    Goodie(int imageID, int x, int y, StudentWorld* sw, Direction dir, double size, unsigned int depth, FrackMan* fm );
     virtual void doSomething() {}
-    virtual int activate(bool pickUpAble);
+    virtual int activate(bool pickUpAble, int SoundID, int pointsIncrease);
     FrackMan* getFrackMan();
     virtual ~Goodie() {}
 private:
@@ -71,7 +86,7 @@ private:
 class GoldNugget: public Goodie
 {
 public:
-    GoldNugget(int x, int y, bool visibility, bool pickableByFrackMan, bool permState, FrackMan* fm);
+    GoldNugget(int x, int y, StudentWorld* sw, bool visibility, bool pickableByFrackMan, bool permState, FrackMan* fm );
     virtual void doSomething();
     ~GoldNugget() {}
 private:
@@ -83,17 +98,25 @@ private:
 class SonarKit: public Goodie
 {
 public:
-    SonarKit(int x, int y, int level, FrackMan* fm);
+    SonarKit(int x, int y,StudentWorld* sw, int level, FrackMan* fm);
     virtual void doSomething();
     ~SonarKit() {}
 private:
     int tickCount;
 };
 
+class Barrel: public Goodie
+{
+public:
+    Barrel(int x, int y, StudentWorld* sw, int level, FrackMan* fm);
+    virtual void doSomething();
+    ~Barrel() {}
+};
+
 class WaterPool: public Goodie
 {
 public:
-    WaterPool(int x, int y, int level, FrackMan* fm);
+    WaterPool(int x, int y,StudentWorld* sw, int level, FrackMan* fm);
     virtual void doSomething();
     ~WaterPool() {}
 private:

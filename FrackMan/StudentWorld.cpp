@@ -1,5 +1,6 @@
 #include "StudentWorld.h"
 #include <string>
+#include <cstdlib>
 using namespace std;
 
 GameWorld* createStudentWorld(string assetDir)
@@ -13,6 +14,14 @@ StudentWorld::StudentWorld(string assetDir)
 :GameWorld(assetDir)
 {
     currentLevel = 0;
+    objectIterator = objects.begin();
+    for(int i = 0; i<VIEW_WIDTH; i++)
+    {
+        for(int j = 0; j<VIEW_HEIGHT-4; j++)
+        {
+            objectPositions[i][j] = '.'; //if contains X then object present at location
+        }
+    }
 }
 
 /*  initialize the game
@@ -26,12 +35,12 @@ StudentWorld::StudentWorld(string assetDir)
  */
 int StudentWorld::init()
 {
-    frackManPointer = new FrackMan(30,60);
+    frackManPointer = new FrackMan(30,60, this);
     for(int i = 0; i<VIEW_WIDTH; i++) //x direction
     {
         for(int j = 0; j<VIEW_HEIGHT-4; j++) //y direction
         {
-            dirtArray[i][j] = new Dirt(i, j);
+            dirtArray[i][j] = new Dirt(i, j, this);
             if(i < 30 || i > 33 ||  j<4) //creates a shaft at x values between 30 and 33
             {
                     dirtArray[i][j]->setVisible(true);
@@ -44,7 +53,33 @@ int StudentWorld::init()
             
         }
     }
+    barrels = min(2+currentLevel, 20);
+    addBarrels();
     return GWSTATUS_CONTINUE_GAME;
+}
+
+double StudentWorld::distance(int x1, int y1, int x2, int y2)
+{
+    return sqrt(pow (x1 - x2, 2) + pow(y1 - y2, 2));
+}
+
+bool StudentWorld::noDirt(int startX, int startY)
+{
+    if(startX>= VIEW_WIDTH-4 || startY>= VIEW_HEIGHT-8)
+    {
+        return false;
+    }
+    for(int i = 0; i<4; i++)
+    {
+        for(int j = 0; j<4; j++)
+        {
+            if(dirtArray[startX+i][startY+j]->isVisible() == true)
+            {
+                return false;
+            }
+        }
+    }
+    return true;
 }
 
 void StudentWorld::removeDirt(int startX, int startY, int endX, int endY)
@@ -64,19 +99,90 @@ void StudentWorld::removeDirt(int startX, int startY, int endX, int endY)
             if(dirtArray[i][j]->isVisible())
             {
                 dirtArray[i][j]->setVisible(false);
+                dirtArray[i][j]->setAlive(false);
                 playSound(SOUND_DIG);
             }
         }
     }
 }
 
-int StudentWorld::move()
+void StudentWorld::addNewItem()
 {
-    // This code is here merely to allow the game to build, run, and terminate after you hit enter a few times.
-    // Notice that the return value GWSTATUS_PLAYER_DIED will cause our framework to end the current level.
+    //check if new Sonar Kit or WaterPool should be added
+    int G = currentLevel*25 + 300;
+    if(rand()%G == 100) //1 in G chance
+    {
+        //add a new item
+        if(rand()%5 == 1) //1 in 5 chance
+        {
+            Actor* newItem = new SonarKit(0, 60, this, currentLevel, frackManPointer);
+            objects.push_back(newItem);
+            objectPositions[0][60] = 'X';
+        }
+        else
+        {
+            int x, y;
+            /*do
+            {
+                x = rand()%VIEW_WIDTH;
+                y = rand()% (VIEW_HEIGHT - 4);
+                
+            }while(noDirt(x, y) == false);*/
+            
+            findCoordinates(x, y, false);
+            objectPositions[x][y] = 'X';
+            
+            Actor* newItem = new WaterPool(x, y, this, currentLevel, frackManPointer);
+            objects.push_back(newItem);
+        }
+    }
+}
+
+void StudentWorld::removeDeadGameObjects()
+{
+    for(int i = 0; i<objects.size(); i++)
+    {
+        if(objects[i]->isAlive() == false)
+        {
+            objectPositions[objects[i]->getX()][objects[i]->getY()] = '.';
+            delete objects[i];
+            objects.erase(objects.begin()+ i);
+            i--; //do not increment i since next object is moved up
+        }
+    }
+}
+
+bool StudentWorld::checkEucDistance(int x, int y)
+{
     
-    
-    
+    return true;
+}
+
+void StudentWorld::findCoordinates(int &x, int &y, bool dirtPresent)
+{
+    //TODO: maybe keep an additional 2D array which marks where objects are. improve checkEucDistance efficiency
+    do
+    {
+        x = rand()%VIEW_WIDTH;
+        y = rand()% (VIEW_HEIGHT - 4);
+        
+    }while(noDirt(x, y) == dirtPresent);// && checkEucDistance(x, y) == false);
+}
+
+//add a barrel to the game
+void StudentWorld::addBarrels()
+{
+    for(int i = 0; i<barrels; i++)
+    {
+        int x, y;
+        findCoordinates(x, y, true);
+        Actor* newItem = new Barrel(x, y, this, currentLevel, frackManPointer); 
+        objects.push_back(newItem);
+    }
+}
+
+void StudentWorld::moveFrackman()
+{
     //do something with FrackMan
     int keyPressed;
     getKey(keyPressed);
@@ -85,14 +191,53 @@ int StudentWorld::move()
     int frackX = frackManPointer->getX();
     int frackY = frackManPointer->getY();
     removeDirt(frackX, frackY, frackX+3, frackY+3);
+}
+
+int StudentWorld::move()
+{
+    // This code is here merely to allow the game to build, run, and terminate after you hit enter a few times.
+    // Notice that the return value GWSTATUS_PLAYER_DIED will cause our framework to end the current level.
     
+    moveFrackman();
+    for(int i = 0; i<objects.size(); i++)
+    {
+        if(objects[i]->isAlive())
+        {
+            objects[i]->doSomething();
+            
+            /*if(frackManPointer->isAlive() == false)
+            {
+                decLives();
+                return GWSTATUS_PLAYER_DIED;
+            }
+            if(barrels == 0)
+            {
+                playSound(SOUND_FINISHED_LEVEL);
+                return GWSTATUS_FINISHED_LEVEL;
+            }*/ //TODO: Correct Code but check for new level creation bug
+
+        }
+    }
+    addNewItem();
     
+    removeDeadGameObjects();
     
+    /*if(frackManPointer->isAlive() == false)
+    {
+        decLives();
+        return GWSTATUS_PLAYER_DIED;
+    }
+    if(barrels == 0)
+    {
+        playSound(SOUND_FINISHED_LEVEL);
+        return GWSTATUS_FINISHED_LEVEL;
+    }*/ //TODO: Correct Code but check for new level creation bug
     
     return GWSTATUS_CONTINUE_GAME;
     /*decLives();
     return GWSTATUS_PLAYER_DIED;*/
 }
+
 
 void StudentWorld::cleanUp()
 {
@@ -101,6 +246,20 @@ void StudentWorld::cleanUp()
         for(int j = 0; j<VIEW_HEIGHT-4; j++)
         {
             delete dirtArray[i][j];
+        }
+    }
+    objectIterator = objects.begin();
+    /*while(objectIterator!= objects.end())
+    {
+        vector<Actor*>::iterator temp = objectIterator;
+        objectIterator++;
+        delete temp;
+    }*/
+    for(int i = 0; i<objects.size(); i++)
+    {
+        if(objects[i]->isAlive() == false)
+        {
+            delete objects[i];
         }
     }
     delete frackManPointer;
@@ -113,6 +272,13 @@ StudentWorld::~StudentWorld()
         for(int j = 0; j<VIEW_HEIGHT-4; j++)
         {
             delete dirtArray[i][j];
+        }
+    }
+    for(int i = 0; i<objects.size(); i++)
+    {
+        if(objects[i]->isAlive() == false)
+        {
+            delete objects[i];
         }
     }
     delete frackManPointer;
