@@ -14,7 +14,6 @@ StudentWorld::StudentWorld(string assetDir)
 :GameWorld(assetDir)
 {
     currentLevel = getLevel();
-    objectIterator = objects.begin();
     
 }
 
@@ -199,7 +198,6 @@ void StudentWorld::sonarChargeUsed()
         if(distance((*i)->getX(), (*i)->getY(), frackManPointer->getX(), frackManPointer->getY()) <= 12.0)
         {
             (*i)->setVisible(true);
-            cerr<<"Set visible by sonar"<<endl;
         }
     }
 }
@@ -284,7 +282,6 @@ void StudentWorld::cleanUp()
             delete dirtArray[i][j];
         }
     }
-    objectIterator = objects.begin();
     /*while(objectIterator!= objects.end())
     {
         vector<Actor*>::iterator temp = objectIterator;

@@ -74,7 +74,6 @@ private:
     int currentLevel;
     int barrels;
     vector<Actor*> objects;
-    vector<Actor*>::iterator objectIterator;
     FrackMan* frackManPointer;
     Dirt* dirtArray[VIEW_WIDTH][VIEW_HEIGHT-4];
 };
