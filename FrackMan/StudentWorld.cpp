@@ -49,7 +49,9 @@ int StudentWorld::init()
         }
     }
     barrels = min(2+currentLevel, 20);
+    nuggets = max(5-currentLevel/2, 2);
     addBarrels();
+    addNuggets();
     return GWSTATUS_CONTINUE_GAME;
 }
 
@@ -150,10 +152,12 @@ string StudentWorld::formatText(int score, int level, int lives, int health, int
     string text;
     
     string scoreText = "Scr: 000000";
-    formatField(10, 5, score, scoreText);
+    if(score!= 0)
+        formatField(10, 5, score, scoreText);
     
     string levelText = "Lvl: 0";
-    formatField(5, 4, level, levelText);
+    if(level!= 0)
+        formatField(5, 4, level, levelText);
     
     string livesText = "Lives: 0";
     livesText[7] = (char)(lives+'0');
@@ -162,16 +166,20 @@ string StudentWorld::formatText(int score, int level, int lives, int health, int
     string healthText = "Hlth: 000%";
     
     string waterText = "Wtr: 0";
-    formatField(5, 4, squirts, waterText);
+    if(squirts!= 0)
+        formatField(5, 4, squirts, waterText);
     
     string goldText = "Gld: 0";
-    formatField(5, 4, gold, goldText);
+    if(gold!= 0)
+        formatField(5, 4, gold, goldText);
     
     string sonarText = "Sonar: 0";
-    formatField(7, 6, sonar, sonarText);
+    if(sonar!= 0)
+        formatField(7, 6, sonar, sonarText);
     
     string oilText = "Oil Left: 0";
-    formatField(10, 9, barrelsLeft, oilText);
+    if(barrelsLeft!=0)
+        formatField(10, 9, barrelsLeft, oilText);
     
     text = scoreText + "  " + levelText + "  " + livesText + "  " + healthText + "  " + waterText + "  " + goldText + "  " + sonarText + "  " + oilText;
     
@@ -235,11 +243,31 @@ void StudentWorld::addBarrels()
     for(int i = 0; i<barrels; i++)
     {
         int x, y;
-        findCoordinates(x, y, true);
-        Actor* newItem = new Barrel(x, y, this, currentLevel, frackManPointer); 
+        do
+        {
+            findCoordinates(x, y, true);
+        }while(noDirt(x, y) == true);
+        Actor* newItem = new Barrel(x, y, this, frackManPointer);
         objects.push_back(newItem);
     }
 }
+
+//add gold nuggets to the game
+void StudentWorld::addNuggets()
+{
+    for(int i = 0; i<nuggets; i++)
+    {
+        int x, y;
+        do
+        {
+            findCoordinates(x, y, true);
+        }while(noDirt(x, y) == true);
+        Actor* newItem = new GoldNugget(x, y, this, false, frackManPointer);
+        objects.push_back(newItem);
+    }
+}
+
+
 
 void StudentWorld::moveFrackman()
 {
@@ -277,17 +305,23 @@ void StudentWorld::squirtUsed(string direction)
     }
     else if(direction == "right")
     {
-        newSquirt = new Squirt(frackManPointer->getX()+4, frackManPointer->getY(), this, frackManPointer->getDirection());
+        newSquirt = new Squirt(frackManPointer->getX(), frackManPointer->getY(), this, frackManPointer->getDirection());
     }
     else if(direction == "up")
     {
-        newSquirt = new Squirt(frackManPointer->getX(), frackManPointer->getY()+4, this, frackManPointer->getDirection());
+        newSquirt = new Squirt(frackManPointer->getX(), frackManPointer->getY(), this, frackManPointer->getDirection());
     }
     else
     {
         newSquirt = new Squirt(frackManPointer->getX(), frackManPointer->getY(), this, frackManPointer->getDirection());
     }
     objects.push_back(newSquirt);
+}
+
+void StudentWorld::dropNugget()
+{
+    Actor* newItem = new GoldNugget(frackManPointer->getX(), frackManPointer->getY(), this, true, frackManPointer);
+    objects.push_back(newItem);
 }
 
 int StudentWorld::move()

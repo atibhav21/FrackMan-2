@@ -61,6 +61,9 @@ public:
     //add barrels to the oil field
     void addBarrels();
     
+    //add gold nuggets to the oil field
+    void addNuggets();
+    
     //move the frackman
     void moveFrackman();
     
@@ -69,6 +72,9 @@ public:
     
     //use a squirt
     void squirtUsed(string direction);
+    
+    //drop a nugget as a bribe
+    void dropNugget();
     
     //remove all the dead objects after a single tick
     void removeDeadGameObjects();
@@ -79,6 +85,7 @@ public:
 private:
     int currentLevel;
     int barrels;
+    int nuggets;
     vector<Actor*> objects;
     FrackMan* frackManPointer;
     Dirt* dirtArray[VIEW_WIDTH][VIEW_HEIGHT-4];

@@ -132,12 +132,7 @@ int Goodie::activate(bool pickUpAble, int SoundID, int pointsIncrease)
         return 4;
     }
     double distance = sqrt( pow(FMP->getX() - getX(), 2) + pow(FMP->getY()-getY(), 2) );
-    if(isVisible() == false && distance<=4.0)
-    {
-        setVisible(true);
-        return 3;
-    }
-    else if(pickUpAble == true && distance<=3.0)
+    if(pickUpAble == true && isVisible() && distance<=3.0)
     {
         getStudentWorld()->playSound(SoundID);
         getStudentWorld()->increaseScore(pointsIncrease);
@@ -145,7 +140,11 @@ int Goodie::activate(bool pickUpAble, int SoundID, int pointsIncrease)
         setVisible(false);
         return 0;
     }
-    
+    else if(pickUpAble == true && !isVisible() && distance<=4.0)
+    {
+        setVisible(true);
+        return 3;
+    }
     return -1;
 }
 
@@ -165,7 +164,7 @@ void SonarKit::doSomething()
 {
     
     int x = activate(true, SOUND_GOT_GOODIE, 75);
-    if(x == 4)
+    if(!isAlive())
     {
         return;
     }
@@ -184,9 +183,10 @@ void SonarKit::doSomething()
 }
 
 //Barrel of Oil Class
-Barrel::Barrel(int x, int y, StudentWorld* sw, int level, FrackMan* fm)
+Barrel::Barrel(int x, int y, StudentWorld* sw, FrackMan* fm)
 :Goodie(IID_BARREL, x, y, sw, right, 1.0, 2, fm)
 {
+    setAlive(true);
     setVisible(false);
 }
 
@@ -204,6 +204,38 @@ void Barrel::doSomething()
     
 }
 
+GoldNugget::GoldNugget(int x, int y, StudentWorld* sw, bool temporary, FrackMan* fm)
+:Goodie(IID_GOLD, x, y, sw, right, 1.0, 2, fm)
+{
+    m_temporary = temporary; // if is temporary then pickable by protestor other wise by frackman
+    setVisible(temporary);
+    setAlive(true);
+    if(m_temporary == true)
+    {
+        tickCount = 10; //TODO
+    }
+}
+
+void GoldNugget::doSomething()
+{
+    int x = activate(!m_temporary, SOUND_GOT_GOODIE, 10);
+    
+    if(x == 4 || x == 3)
+    {
+        return;
+    }
+    if(x == 0)
+    {
+        getFrackMan()->setGold(1);
+        return;
+    }
+    
+    if(m_temporary == true && tickCount <= 0)
+    {
+        setAlive(false);
+        setVisible(false);
+    }
+}
 
 
 //Water Pool Class
@@ -287,6 +319,10 @@ void FrackMan::pressKey(int key)
     }
     else if(key == KEY_PRESS_SPACE)
     {
+        if(squirtUnits == 0)
+        {
+            return;
+        }
         squirtUnits--;
         if(getDirection() == left)
         {
@@ -305,6 +341,15 @@ void FrackMan::pressKey(int key)
             getStudentWorld()->squirtUsed("down");
         }
         
+    }
+    else if(key == KEY_PRESS_TAB)
+    {
+        if(goldNuggets == 0)
+        {
+            return;
+        }
+        getStudentWorld()->dropNugget();
+        goldNuggets--;
     }
 }
 

@@ -123,10 +123,11 @@ public:
     virtual bool canDigThroughDirt() const {return false;}
     ~GoldNugget() {}
 private:
-    
+    bool m_temporary;
+    int tickCount;
 };
 
-
+//pickable by the protestors
 class Bribe: public Goodie
 {
 public:
@@ -152,7 +153,7 @@ private:
 class Barrel: public Goodie
 {
 public:
-    Barrel(int x, int y, StudentWorld* sw, int level, FrackMan* fm);
+    Barrel(int x, int y, StudentWorld* sw, FrackMan* fm);
     virtual void doSomething();
     virtual bool canDigThroughDirt() const {return false;}
     ~Barrel() {}
