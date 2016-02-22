@@ -48,8 +48,11 @@ int StudentWorld::init()
             
         }
     }
+    
     barrels = min(2+currentLevel, 20);
     nuggets = max(5-currentLevel/2, 2);
+    boulders = min(currentLevel/2 + 2, 6);
+    addBoulders();
     addBarrels();
     addNuggets();
     return GWSTATUS_CONTINUE_GAME;
@@ -58,6 +61,15 @@ int StudentWorld::init()
 double StudentWorld::distance(int x1, int y1, int x2, int y2)
 {
     return sqrt(pow (x1 - x2, 2) + pow(y1 - y2, 2));
+}
+
+bool StudentWorld::dirtAt(int x, int y) const
+{
+    if(dirtArray[x][y]->isAlive() || dirtArray[x][y]->isVisible())
+    {
+        return true;
+    }
+    return false;
 }
 
 bool StudentWorld::noDirt(int startX, int startY)
@@ -89,6 +101,7 @@ void StudentWorld::removeDirt(int startX, int startY, int endX, int endY)
     {
         endY = 59;
     }
+    bool soundToBePlayed = false;
     for(int i = startX; i<= endX; i++)
     {
         for(int j = startY; j<= endY; j++)
@@ -97,9 +110,13 @@ void StudentWorld::removeDirt(int startX, int startY, int endX, int endY)
             {
                 dirtArray[i][j]->setVisible(false);
                 dirtArray[i][j]->setAlive(false);
-                playSound(SOUND_DIG);
+                soundToBePlayed = true;
             }
         }
+    }
+    if(soundToBePlayed == true)
+    {
+        playSound(SOUND_DIG);
     }
 }
 
@@ -112,7 +129,7 @@ void StudentWorld::addNewItem()
         //add a new item
         if(rand()%5 == 1) //1 in 5 chance
         {
-            Actor* newItem = new SonarKit(0, 60, this, currentLevel, frackManPointer);
+            Actor* newItem = new SonarKit(0, 60, this, frackManPointer);
             objects.push_back(newItem);
         }
         else
@@ -127,7 +144,7 @@ void StudentWorld::addNewItem()
             
             findCoordinates(x, y, false);
             
-            Actor* newItem = new WaterPool(x, y, this, currentLevel, frackManPointer);
+            Actor* newItem = new WaterPool(x, y, this, frackManPointer);
             objects.push_back(newItem);
         }
     }
@@ -212,6 +229,17 @@ void StudentWorld::removeDeadGameObjects()
             i--; //do not increment i since next object is moved up
         }
     }
+    /*for(int i = 0; i< VIEW_WIDTH; i++)
+    {
+        for(int j = 0; j<VIEW_HEIGHT-4; j++)
+        {
+            if(dirtArray[i][j]!= nullptr && dirtArray[i][j]->isAlive() == false)
+            {
+                delete dirtArray[i][j];
+                dirtArray[i][j] = nullptr;
+            }
+        }
+    }*/
 }
 
 bool StudentWorld::checkEucDistance(int x, int y)
@@ -267,7 +295,21 @@ void StudentWorld::addNuggets()
     }
 }
 
-
+//add boulders to the game
+void StudentWorld::addBoulders()
+{
+    for(int i = 0; i<boulders; i++)
+    {
+        int x, y;
+        do
+        {
+            findCoordinates(x, y, true);
+        }while(noDirt(x, y) == true);
+        Actor* newItem = new Boulder(x, y, this);
+        removeDirt(x, y, x+3, y+3);
+        objects.push_back(newItem);
+    }
+}
 
 void StudentWorld::moveFrackman()
 {
@@ -324,6 +366,31 @@ void StudentWorld::dropNugget()
     objects.push_back(newItem);
 }
 
+bool StudentWorld::canActorMoveTo(Actor* a, int x, int y) const
+{
+    //TODO: Change the implementation of dirt
+    //TODO: Falling down of boulder
+    if(dirtAt(x, y) == true && a->canDigThroughDirt() == false)
+    {
+        return false;
+    }
+    for(int i = 0; i<objects.size(); i++)
+    {
+        if(objects[i] == a)
+        {
+            continue;
+        }
+        if(fabs(x - objects[i]->getX()) < 4.0 && fabs(y - objects[i]->getY()) < 4.0)
+        {
+            if(objects[i]->canActorsPassThroughMe() == false)
+            {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 int StudentWorld::move()
 {
     // This code is here merely to allow the game to build, run, and terminate after you hit enter a few times.
@@ -377,7 +444,13 @@ void StudentWorld::cleanUp()
     {
         for(int j = 0; j<VIEW_HEIGHT-4; j++)
         {
-            delete dirtArray[i][j];
+            if(dirtArray[i][j]!= nullptr)
+            {
+                dirtArray[i][j]->setAlive(false);
+                dirtArray[i][j]->setVisible(false);
+                delete dirtArray[i][j];
+            }
+            
         }
     }
     /*while(objectIterator!= objects.end())
@@ -401,7 +474,11 @@ StudentWorld::~StudentWorld()
     {
         for(int j = 0; j<VIEW_HEIGHT-4; j++)
         {
-            delete dirtArray[i][j];
+            if(dirtArray[i][j] != nullptr)
+            {
+                delete dirtArray[i][j];
+            }
+            
         }
     }
     for(int i = 0; i<objects.size(); i++)

@@ -50,6 +50,8 @@ public:
     //add a new Item to the grid
     void addNewItem();
     
+    bool dirtAt(int x,int y) const;
+    
     void decBarrels() {barrels--;}
     
     //set the game status line
@@ -58,11 +60,23 @@ public:
     //format the text
     string formatText(int score, int level, int lives, int health, int squirts, int gold, int sonar, int barrelsLeft);
     
+    //can the actor move to location x, y?
+    bool canActorMoveTo(Actor* a, int x, int y) const;
+    
+    //return frackManPointer
+    FrackMan* getFrackMan() const
+    {
+        return frackManPointer;
+    }
+    
     //add barrels to the oil field
     void addBarrels();
     
     //add gold nuggets to the oil field
     void addNuggets();
+    
+    //add boulders to the field
+    void addBoulders();
     
     //move the frackman
     void moveFrackman();
@@ -86,6 +100,7 @@ private:
     int currentLevel;
     int barrels;
     int nuggets;
+    int boulders;
     vector<Actor*> objects;
     FrackMan* frackManPointer;
     Dirt* dirtArray[VIEW_WIDTH][VIEW_HEIGHT-4];

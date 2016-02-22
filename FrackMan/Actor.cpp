@@ -24,7 +24,7 @@ void Actor::setAlive(bool value)
     m_isAlive = value;
 }
 
-bool Actor::huntsFrackMan() const
+bool Actor::canAnnoyFrackMan() const
 {
     return false;
 }
@@ -37,6 +37,25 @@ bool Actor::canDigThroughDirt() const
 StudentWorld* Actor::getStudentWorld() const
 {
     return studentWorld;
+}
+
+bool Actor::canActorsPassThroughMe() const
+{
+    return true;
+}
+
+bool Actor::canPickThingsUp() const
+{
+    return false;
+}
+
+bool Actor::moveToIfPossible(int x, int y)
+{
+    if(x>= VIEW_WIDTH || y>= VIEW_HEIGHT - 4 || x< 0 || y< 0)
+    {
+        return false;
+    }
+    return getStudentWorld()->canActorMoveTo(this, x, y);
 }
 
 //dirt Class
@@ -84,26 +103,164 @@ void Squirt::doSomething()
     int y = getY();
     switch (getDirection()) {
         case left:
-            moveTo(x-1, y);
-            travelDistance--;
+            if(moveToIfPossible( x-1, y) == true)
+            {
+                moveTo(x-1, y);
+                travelDistance--;
+            }
+            else
+            {
+                setVisible(false);
+                setAlive(false);
+            }
             break;
         case right:
-            moveTo(x+1, y);
-            travelDistance--;
+            if(moveToIfPossible( x+1, y) == true)
+            {
+                moveTo(x+1, y);
+                travelDistance--;
+            }
+            else
+            {
+                setVisible(false);
+                setAlive(false);
+            }
             break;
         case up:
-            moveTo(x, y+1);
-            travelDistance--;
+            if(moveToIfPossible( x, y+1) == true)
+            {
+                moveTo(x, y+1);
+                travelDistance--;
+            }
+            else
+            {
+                setVisible(false);
+                setAlive(false);
+            }
             break;
         case down:
-            moveTo(x, y-1);
-            travelDistance--;
+            if(moveToIfPossible( x, y-1) == true)
+            {
+                moveTo(x, y-1);
+                travelDistance--;
+            }
+            else
+            {
+                setVisible(false);
+                setAlive(false);
+            }
             break;
         default:
-            cerr<<"FUCK THIS BUG"<<endl;
+            cerr<<"Error!!"<<endl;
             break;
     }
     
+    
+}
+
+//Boulder Class
+Boulder::Boulder(int x, int y, StudentWorld* sw)
+:Actor(IID_BOULDER,x, y, sw, down, 1.0, 1)
+{
+    setVisible(true);
+    setAlive(true);
+    stableState = true;
+    waitingState = false;
+    fallingState = false;
+    centerX = getX() + 2.0;
+    centerY = getY() + 2.0;
+}
+
+void Boulder::getCenter(double& x, double& y)
+{
+    x = centerX;
+    y = centerY;
+}
+
+bool Boulder::checkDirtUnder(int x, int y)
+{
+    for(int i = x; i<= x+3; i++)
+    {
+        if(getStudentWorld()->dirtAt(i, y-1) == true)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool Boulder::canActorsPassThroughMe() const
+{
+    return false;
+}
+
+bool Boulder::canAnnoyFrackMan() const
+{
+    return true;
+}
+
+void Boulder::doSomething()
+{
+    int x = getX();
+    int y = getY();
+    if(!isAlive())
+    {
+        return;
+    }
+    if(checkDirtUnder(x, y) == true)
+    {
+        return;
+    }
+    
+    // since its reached this point there's no dirt below the boulder
+    if(stableState == true && waitingState == false)
+    {
+        stableState = false;
+        waitingState = true;
+        tickCount = 30;
+        return;
+    }
+    if(waitingState == true && tickCount>0)
+    {
+        tickCount--;
+        return;
+    }
+    if(waitingState == true && tickCount <= 0)
+    {
+        waitingState = false;
+        fallingState = true;
+        getStudentWorld()->playSound(SOUND_FALLING_ROCK);
+    }
+    
+    if(fallingState == true)
+    {
+        FrackMan* frackMan = getStudentWorld()->getFrackMan();
+        if(checkDirtUnder(x, y) == true || x == 0)
+        {
+            fallingState = false;
+            setVisible(false);
+            setAlive(false);
+        }
+        else if(fabs(x - frackMan->getX() )< 4.0 && frackMan->getY() == y-1)
+        {
+            setVisible(false);
+            setAlive(false);
+            frackMan->annoy(100);
+        }
+        else
+        {
+            if(moveToIfPossible( getX(), getY()-1) == true)
+            {
+                moveTo(getX(), getY()-1);
+            }
+            else
+            {
+                fallingState = false;
+                setVisible(false);
+                setAlive(false);
+            }
+        }
+    }
     
 }
 
@@ -153,9 +310,10 @@ int Goodie::activate(bool pickUpAble, int SoundID, int pointsIncrease)
 
 
 //Sonar Kit Class
-SonarKit::SonarKit(int x, int y, StudentWorld* sw, int level, FrackMan* fm)
+SonarKit::SonarKit(int x, int y, StudentWorld* sw, FrackMan* fm)
 :Goodie(IID_SONAR, x, y, sw, right, 1.0, 2, fm)
 {
+    int level = getStudentWorld()->getLevel();
     tickCount = max(100, 300 - (10* level) );
 }
 
@@ -164,13 +322,10 @@ void SonarKit::doSomething()
 {
     
     int x = activate(true, SOUND_GOT_GOODIE, 75);
-    if(!isAlive())
-    {
-        return;
-    }
     if(x == 0)
     {
-        getFrackMan()->setSonarCharges(2);
+        getFrackMan()->incSonarCharges(2);
+        return;
     }
     tickCount--;
     if(tickCount <= 0)
@@ -204,6 +359,7 @@ void Barrel::doSomething()
     
 }
 
+//Gold Nugget Class
 GoldNugget::GoldNugget(int x, int y, StudentWorld* sw, bool temporary, FrackMan* fm)
 :Goodie(IID_GOLD, x, y, sw, right, 1.0, 2, fm)
 {
@@ -212,7 +368,7 @@ GoldNugget::GoldNugget(int x, int y, StudentWorld* sw, bool temporary, FrackMan*
     setAlive(true);
     if(m_temporary == true)
     {
-        tickCount = 10; //TODO
+        tickCount = 100; 
     }
 }
 
@@ -229,7 +385,11 @@ void GoldNugget::doSomething()
         getFrackMan()->setGold(1);
         return;
     }
-    
+    if(m_temporary == true && isAlive() && tickCount> 0)
+    {
+        tickCount--;
+        return;
+    }
     if(m_temporary == true && tickCount <= 0)
     {
         setAlive(false);
@@ -239,9 +399,10 @@ void GoldNugget::doSomething()
 
 
 //Water Pool Class
-WaterPool::WaterPool(int x, int y, StudentWorld* sw, int level, FrackMan* fm)
+WaterPool::WaterPool(int x, int y, StudentWorld* sw, FrackMan* fm)
 :Goodie(IID_WATER_POOL, x, y, sw, right, 1.0, 2, fm)
 {
+    int level = getStudentWorld()->getLevel();
     tickCount = max(100, 300 - (10*level) );
 }
 
@@ -353,6 +514,15 @@ void FrackMan::pressKey(int key)
     }
 }
 
+void FrackMan::annoy(int amt)
+{
+    health -= amt;
+    if(health <= 0)
+    {
+        setAlive(false);
+        setVisible(false);
+    }
+}
 
 void FrackMan::doSomething()
 {
@@ -370,7 +540,7 @@ void FrackMan::doSomething()
             
             if(directionToMoveIn == down)
             {
-                if(y!= 0)
+                if(moveToIfPossible(x, y-1) == true)
                 {
                     moveTo(x, y-1);
                    
@@ -384,7 +554,7 @@ void FrackMan::doSomething()
             }
             else if(directionToMoveIn == up )
             {
-                if(y!= 60)
+                if(moveToIfPossible(x, y+1) == true)
                 {
                     moveTo(x , y+1);
                     
