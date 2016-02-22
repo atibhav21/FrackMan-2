@@ -14,7 +14,7 @@ Actor::Actor(int imageID, int startX, int startY, StudentWorld* sw, Direction di
     studentWorld = sw;
 }
 
-bool Actor::isAlive()
+bool Actor::isAlive() const
 {
     return m_isAlive;
 }
@@ -24,7 +24,17 @@ void Actor::setAlive(bool value)
     m_isAlive = value;
 }
 
-StudentWorld* Actor::getStudentWorld()
+bool Actor::huntsFrackMan() const
+{
+    return false;
+}
+
+bool Actor::canDigThroughDirt() const
+{
+    return false;
+}
+
+StudentWorld* Actor::getStudentWorld() const
 {
     return studentWorld;
 }
@@ -70,22 +80,23 @@ void Squirt::doSomething()
         return;
     }
     //TODO: Check for protestor, dirt and boulder and edge of grid
-    
+    int x = getX();
+    int y = getY();
     switch (getDirection()) {
         case left:
-            moveTo(getX()-1, getY());
+            moveTo(x-1, y);
             travelDistance--;
             break;
         case right:
-            moveTo(getX()+1, getY());
+            moveTo(x+1, y);
             travelDistance--;
             break;
         case up:
-            moveTo(getX(), getY()+1);
+            moveTo(x, y+1);
             travelDistance--;
             break;
         case down:
-            moveTo(getX(), getY()-1);
+            moveTo(x, y-1);
             travelDistance--;
             break;
         default:
@@ -140,24 +151,7 @@ int Goodie::activate(bool pickUpAble, int SoundID, int pointsIncrease)
 
 
 
-//Gold Nugget Class
-GoldNugget::GoldNugget(int x, int y, StudentWorld* sw, bool visibility, bool pickableByFrackMan, bool permState, FrackMan* fm)
-:Goodie(IID_GOLD, x, y, sw, right, 1.0, 2, fm)
-{
-    m_pickable = pickableByFrackMan;
-    m_permState = permState;
-    setVisible(visibility);
-    
-}
 
-void GoldNugget::doSomething()
-{
-    if(isAlive() == false)
-    {
-        return;
-    }
-
-}
 
 //Sonar Kit Class
 SonarKit::SonarKit(int x, int y, StudentWorld* sw, int level, FrackMan* fm)

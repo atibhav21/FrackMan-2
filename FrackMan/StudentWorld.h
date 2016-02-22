@@ -52,6 +52,12 @@ public:
     
     void decBarrels() {barrels--;}
     
+    //set the game status line
+    void setDisplayText();
+    
+    //format the text
+    string formatText(int score, int level, int lives, int health, int squirts, int gold, int sonar, int barrelsLeft);
+    
     //add barrels to the oil field
     void addBarrels();
     

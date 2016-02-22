@@ -43,6 +43,7 @@ int StudentWorld::init()
             else
             {
                 dirtArray[i][j]->setVisible(false); //do not display any dirt at this position
+                dirtArray[i][j]->setAlive(false);
             }
             
         }
@@ -128,6 +129,68 @@ void StudentWorld::addNewItem()
             objects.push_back(newItem);
         }
     }
+}
+
+void formatField(int start, int end, int value, string& result)
+{
+    for(int i = start; start>= end; i--)
+    {
+        int digit = value%10;
+        result[i] = (char) (digit+'0');
+        value = value /10;
+        if(value == 0)
+        {
+            break;
+        }
+    }
+}
+
+string StudentWorld::formatText(int score, int level, int lives, int health, int squirts, int gold, int sonar, int barrelsLeft)
+{
+    string text;
+    
+    string scoreText = "Scr: 000000";
+    formatField(10, 5, score, scoreText);
+    
+    string levelText = "Lvl: 0";
+    formatField(5, 4, level, levelText);
+    
+    string livesText = "Lives: 0";
+    livesText[7] = (char)(lives+'0');
+    
+    //TODO: Health field
+    string healthText = "Hlth: 000%";
+    
+    string waterText = "Wtr: 0";
+    formatField(5, 4, squirts, waterText);
+    
+    string goldText = "Gld: 0";
+    formatField(5, 4, gold, goldText);
+    
+    string sonarText = "Sonar: 0";
+    formatField(7, 6, sonar, sonarText);
+    
+    string oilText = "Oil Left: 0";
+    formatField(10, 9, barrelsLeft, oilText);
+    
+    text = scoreText + "  " + levelText + "  " + livesText + "  " + healthText + "  " + waterText + "  " + goldText + "  " + sonarText + "  " + oilText;
+    
+    return text;
+}
+
+void StudentWorld::setDisplayText()
+{
+    int score = getScore();
+    int level = getLevel();
+    int lives = getLives();
+    int health = frackManPointer->getHealth();
+    int squirts = frackManPointer->getSquirtsLeft();
+    int gold = frackManPointer->getGold();
+    int sonar = frackManPointer->getSonarCharges();
+    int barrelsLeft = barrels;
+    
+    string s = formatText(score, level, lives, health, squirts, gold, sonar, barrelsLeft);
+    setGameStatText(s);
 }
 
 void StudentWorld::removeDeadGameObjects()
@@ -231,6 +294,7 @@ int StudentWorld::move()
 {
     // This code is here merely to allow the game to build, run, and terminate after you hit enter a few times.
     // Notice that the return value GWSTATUS_PLAYER_DIED will cause our framework to end the current level.
+    setDisplayText();
     
     moveFrackman();
     for(int i = 0; i<objects.size(); i++)

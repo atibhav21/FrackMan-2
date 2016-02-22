@@ -14,9 +14,22 @@ class Actor: public GraphObject
 public:
     Actor(int imageID, int startX, int startY,  StudentWorld* sw, Direction dir = right, double size = 1.0, unsigned int depth = 0);
     virtual void doSomething() = 0;
-    virtual bool isAlive();
+    
+    virtual bool isAlive() const;
+    
     void setAlive(bool value);
-    StudentWorld* getStudentWorld();
+    
+    StudentWorld* getStudentWorld() const;
+    
+    // Can this actor dig through dirt?
+    virtual bool canDigThroughDirt() const;
+    
+    // Does this actor hunt the FrackMan?
+    virtual bool huntsFrackMan() const;
+    
+    // checks if object can move to x, y
+    bool moveToIfPossible(int x, int y);
+    
     virtual ~Actor() {}
 private:
     bool m_isAlive;
@@ -28,6 +41,7 @@ class FrackMan: public Actor
 public:
     FrackMan(int x, int y, StudentWorld* sw);
     virtual void doSomething();
+    virtual bool canDigThroughDirt() const {return true;}
     int getHitPoints()              { return hitPoints;}
     void setHitPoints(int amt)      { hitPoints += amt; }
     int getSquirtsLeft()            { return squirtUnits; }
@@ -60,6 +74,7 @@ public:
     Squirt(int x, int y, StudentWorld* sw, Direction dir);
     virtual void doSomething();
     int getTravelDistance()     {return travelDistance; }
+    virtual bool canDigThroughDirt() const {return false;}
     ~Squirt()                   {}
 private:
     int travelDistance;
@@ -80,6 +95,7 @@ class Dirt: public Actor
     
 public:
     Dirt(int x, int y, StudentWorld* sw);
+    virtual bool canDigThroughDirt() const {return false;}
     virtual void doSomething();
     ~Dirt() {}
 };
@@ -89,6 +105,7 @@ class Goodie: public Actor
 public:
     Goodie(int imageID, int x, int y, StudentWorld* sw, Direction dir, double size, unsigned int depth, FrackMan* fm );
     virtual void doSomething() {}
+    virtual bool canDigThroughDirt() const {return false;}
     virtual int activate(bool pickUpAble, int SoundID, int pointsIncrease);
     FrackMan* getFrackMan();
     virtual ~Goodie() {}
@@ -96,16 +113,29 @@ private:
     FrackMan* FMP; //frackman pointer
 };
 
+
+//pickable only by the frackman
 class GoldNugget: public Goodie
 {
 public:
-    GoldNugget(int x, int y, StudentWorld* sw, bool visibility, bool pickableByFrackMan, bool permState, FrackMan* fm );
+    GoldNugget( int startX, int startY,StudentWorld* world, bool temporary, FrackMan* fm);
     virtual void doSomething();
+    virtual bool canDigThroughDirt() const {return false;}
     ~GoldNugget() {}
 private:
-    bool m_visibility;
-    bool m_pickable;
-    bool m_permState;
+    
+};
+
+
+class Bribe: public Goodie
+{
+public:
+    Bribe(int startX, int startY,StudentWorld* world, bool temporary, FrackMan* fm);
+    virtual void doSomething();
+    virtual bool canDigThroughDirt() const {return false;}
+    ~Bribe() {}
+private:
+    
 };
 
 class SonarKit: public Goodie
@@ -113,6 +143,7 @@ class SonarKit: public Goodie
 public:
     SonarKit(int x, int y,StudentWorld* sw, int level, FrackMan* fm);
     virtual void doSomething();
+    virtual bool canDigThroughDirt() const {return false;}
     ~SonarKit() {}
 private:
     int tickCount;
@@ -123,6 +154,7 @@ class Barrel: public Goodie
 public:
     Barrel(int x, int y, StudentWorld* sw, int level, FrackMan* fm);
     virtual void doSomething();
+    virtual bool canDigThroughDirt() const {return false;}
     ~Barrel() {}
 };
 
@@ -131,6 +163,7 @@ class WaterPool: public Goodie
 public:
     WaterPool(int x, int y,StudentWorld* sw, int level, FrackMan* fm);
     virtual void doSomething();
+    virtual bool canDigThroughDirt() const {return false;}
     ~WaterPool() {}
 private:
     int tickCount;
