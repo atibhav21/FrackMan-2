@@ -33,6 +33,8 @@ public:
     // Does this actor hunt the FrackMan?
     virtual bool canAnnoyFrackMan() const;
     
+    virtual int getAnnoyancePoints() const {return 0;}
+    
     // checks if object can move to x, y
     bool moveToIfPossible(int x, int y);
     
@@ -42,7 +44,70 @@ private:
     StudentWorld* studentWorld;
 };
 
-class FrackMan: public Actor
+class Agent : public Actor
+{
+public:
+    Agent(StudentWorld* world, int startX, int startY, Direction startDir,
+          int imageID, unsigned int hitPoints);
+    
+    // Pick up a gold nugget.
+    virtual void addGold() = 0;
+    
+    // How many hit points does this actor have left?
+    unsigned int getHitPoints() const {return m_hitPoints;}
+    
+    virtual bool annoy(unsigned int amount);
+    virtual bool canPickThingsUp() const {return true; }
+    virtual bool canMoveInDirection(Direction d);
+    virtual void moveInDirection();
+private:
+    int m_hitPoints;
+};
+
+class Protester: public Agent
+{
+public:
+    Protester(StudentWorld* world, int startX, int startY, int imageID, unsigned int hitPoints, unsigned int score);
+    virtual void doSomething() {}
+    
+    virtual bool annoy(unsigned int amount);
+    virtual void addGold() {m_gold++;}
+    virtual bool huntsFrackMan() const {return true; }
+    virtual bool canAnnoyFrackMan() const {return true; }
+    virtual int getAnnoyancePoints() const {return 0;}
+    
+    // Set state to having given up protest
+    //void setMustLeaveOilField() {}
+    
+    //check if protester is in leave oil field state
+    void getMustLeaveOilField();
+    
+    // Set number of ticks until next move
+    void setTicksToNextMove();
+private:
+    int m_gold;
+    
+    int m_hitPoints;
+};
+
+class RegularProtester : public Protester
+{
+public:
+    RegularProtester(StudentWorld* world, int startX, int startY);
+    virtual void doSomething();
+    virtual void changeDirection();
+    virtual int getAnnoyancePoints() const {return 2;}
+    virtual bool canAnnoyFrackMan() const;
+private:
+    int stepsToMove;
+    bool leaveOilFieldState;
+    int ticksToWait;
+    int level;
+    int ticksSinceLastShout;
+    int restingTicks;
+};
+
+class FrackMan: public Agent
 {
 public:
     FrackMan(int x, int y, StudentWorld* sw);
@@ -52,14 +117,12 @@ public:
     virtual bool canPickThingsUp() const {return true;}
     
     int getHitPoints()              { return hitPoints;}
-    void setHitPoints(int amt)      { hitPoints += amt; }
     int getSquirtsLeft()            { return squirtUnits; }
     void setSquirts(int amt)        { squirtUnits += amt; }
     int getSonarCharges()           { return sonarCharges;}
     void incSonarCharges(int amt)   {sonarCharges += amt; }
     int getGold()                   { return goldNuggets; }
-    void setGold(int amt)           {goldNuggets += amt; }
-    int getHealth()                 { return health; }
+    virtual void addGold()           {goldNuggets += 1; }
     void annoy(int amt);                
     
     void pressKey(int key);
@@ -73,7 +136,6 @@ private:
     int sonarCharges;
     int goldNuggets;
     int points;
-    int health;
     bool movePending;
 };
 
@@ -96,6 +158,7 @@ public:
     virtual bool canActorsPassThroughMe() const ;
     virtual bool canDigThroughDirt() const {return false;}
     virtual bool canAnnoyFrackMan() const;
+    virtual int getAnnoyancePoints() const {return 10;}
     void getCenter( double& x, double &y) ;
 private:
     bool checkDirtUnder(int x, int y);
@@ -106,18 +169,6 @@ private:
     double centerX;
     double centerY;
     
-};
-
-class Protester: public Actor
-{
-public:
-    Protester();
-    virtual void doSomething();
-    virtual bool canDigThroughDirt() {return true;}
-    virtual bool canPickThingsUp() const {return true; }
-    virtual ~Protester();
-private:
-    int health;
 };
 
 class Dirt: public Actor

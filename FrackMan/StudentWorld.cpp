@@ -1,6 +1,8 @@
 #include "StudentWorld.h"
 #include <string>
 #include <cstdlib>
+#include <queue>
+#include <algorithm>
 using namespace std;
 
 GameWorld* createStudentWorld(string assetDir)
@@ -14,8 +16,72 @@ StudentWorld::StudentWorld(string assetDir)
 :GameWorld(assetDir)
 {
     currentLevel = getLevel();
-    
+    //updateExitGrid(0, 60);
+    /*for(int i = 0; i<16; i++)
+    {
+        for(int j = 0; j<16; j++)
+        {
+            cerr<<exitGrid[i][j].m_count;
+        }
+        cerr<<endl;
+    }*/
 }
+
+/*void StudentWorld::updateExitGrid(int x, int y)
+{
+    queue<Coord> m_queue;
+    Coord a(60 , 60 , 0);
+    m_queue.push(a);
+    exitGrid[x][y].m_count = 0;
+    while(!m_queue.empty())
+    {
+        Coord mCoord(m_queue.front().x, m_queue.front().y, m_queue.front().count);
+        int m_x = m_queue.front().x / 4;
+        int m_y = m_queue.front().y / 4;
+        int m_count = m_queue.front().count;
+        m_queue.pop();
+        if(mCoord.x == x && mCoord.y == y)
+        {
+            exitGrid[x/4][y/4] = m_count;
+            return;
+        }
+        else
+        {
+            if((m_y+1) < VIEW_HEIGHT-4 && !dirtArray[m_x][m_y+1]->isVisible() && exitGrid[m_x/4][(m_y/4)+1].visited == false ) //can move north
+            {
+                Coord temp(m_x, m_y+1, m_count+1);
+                m_queue.push(temp);
+                exitGrid[m_x][m_y+1].m_count = m_count+1;
+                exitGrid[m_x][m_y+1].visited = true;
+            }
+            if((m_x+1)/4 < VIEW_WIDTH && !dirtArray[(m_x+1)/4-1][m_y/4-1]->isVisible() && exitGrid[m_x/4+1][m_y/4].visited == false ) //can move east
+            {
+                Coord temp(m_x+1, m_y, m_count+1);
+                m_queue.push(temp);
+                exitGrid[m_x+1][m_y].visited = true;
+                exitGrid[m_x+1][m_y].m_count = m_count+1;
+            }
+            
+            if((m_y-1)/4 > 0 && !dirtArray[m_x/4-1][(m_y-1)/4-1]->isVisible() && exitGrid[m_x/4][m_y/4-1].visited == false ) //can move north
+            {
+                Coord temp(m_x, m_y-1, m_count+1);
+                m_queue.push(temp);
+                exitGrid[m_x][m_y-1].visited = true;
+                exitGrid[m_x][m_y-1].m_count = m_count+1;
+            }
+            if((m_x-1)/4 > 0 && !dirtArray[(m_x-1)/4-1][m_y/4-1]->isVisible() && exitGrid[m_x/4-1][m_y/4].visited == false ) //can move west
+            {
+                Coord temp(m_x-1, m_y, m_count+1);
+                m_queue.push(temp);
+                exitGrid[m_x-1][m_y].visited = true;
+                exitGrid[m_x-1][m_y].m_count = m_count+1;
+            }
+            
+        }
+        
+    }
+    
+}*/
 
 /*  initialize the game
  *  intialize all the data structures required for the game
@@ -38,6 +104,7 @@ int StudentWorld::init()
             if(i < 30 || i > 33 ||  j<4) //creates a shaft at x values between 30 and 33
             {
                     dirtArray[i][j]->setVisible(true);
+                    dirtArray[i][j]->setAlive(true);
                 
             }
             else
@@ -55,16 +122,21 @@ int StudentWorld::init()
     addBoulders();
     addBarrels();
     addNuggets();
+    Actor* newItem = new RegularProtester(this, 60, 60);
+    objects.push_back(newItem); 
     return GWSTATUS_CONTINUE_GAME;
 }
 
-double StudentWorld::distance(int x1, int y1, int x2, int y2)
+
+double StudentWorld::distance(int x1, int y1, int x2, int y2) const
 {
     return sqrt(pow (x1 - x2, 2) + pow(y1 - y2, 2));
 }
 
 bool StudentWorld::dirtAt(int x, int y) const
 {
+    if(x>=64 || y>=60)
+        return false;
     if(dirtArray[x][y]->isAlive() || dirtArray[x][y]->isVisible())
     {
         return true;
@@ -72,7 +144,7 @@ bool StudentWorld::dirtAt(int x, int y) const
     return false;
 }
 
-bool StudentWorld::noDirt(int startX, int startY)
+bool StudentWorld::noDirt(int startX, int startY) const
 {
     if(startX>= VIEW_WIDTH-4 || startY>= VIEW_HEIGHT-8)
     {
@@ -89,6 +161,16 @@ bool StudentWorld::noDirt(int startX, int startY)
         }
     }
     return true;
+}
+
+void StudentWorld::annoyFrackMan(int amt)
+{
+    frackManPointer->annoy(amt);
+}
+
+double StudentWorld::getFrackManDistance(int x, int y) const
+{
+    return distance(x, y, frackManPointer->getX(), frackManPointer->getY());
 }
 
 void StudentWorld::removeDirt(int startX, int startY, int endX, int endY)
@@ -135,14 +217,12 @@ void StudentWorld::addNewItem()
         else
         {
             int x, y;
-            /*do
+            do
             {
                 x = rand()%VIEW_WIDTH;
                 y = rand()% (VIEW_HEIGHT - 4);
                 
-            }while(noDirt(x, y) == false);*/
-            
-            findCoordinates(x, y, false);
+            }while(noDirt(x, y) == false || checkEucDistance(x, y) == false);
             
             Actor* newItem = new WaterPool(x, y, this, frackManPointer);
             objects.push_back(newItem);
@@ -172,19 +252,21 @@ string StudentWorld::formatText(int score, int level, int lives, int health, int
     if(score!= 0)
         formatField(10, 5, score, scoreText);
     
-    string levelText = "Lvl: 0";
+    string levelText = "Lvl:  0";
     if(level!= 0)
-        formatField(5, 4, level, levelText);
+        formatField(6, 5, level, levelText);
     
     string livesText = "Lives: 0";
     livesText[7] = (char)(lives+'0');
     
     //TODO: Health field
     string healthText = "Hlth: 000%";
+    if(health!= 0)
+        formatField(8, 6, health*10, healthText);
     
-    string waterText = "Wtr: 0";
+    string waterText = "Wtr:  0";
     if(squirts!= 0)
-        formatField(5, 4, squirts, waterText);
+        formatField(6, 5, squirts, waterText);
     
     string goldText = "Gld: 0";
     if(gold!= 0)
@@ -208,7 +290,7 @@ void StudentWorld::setDisplayText()
     int score = getScore();
     int level = getLevel();
     int lives = getLives();
-    int health = frackManPointer->getHealth();
+    int health = frackManPointer->getHitPoints();
     int squirts = frackManPointer->getSquirtsLeft();
     int gold = frackManPointer->getGold();
     int sonar = frackManPointer->getSonarCharges();
@@ -246,7 +328,7 @@ bool StudentWorld::checkEucDistance(int x, int y)
 {
     for(vector<Actor*>::iterator i = objects.begin(); i!= objects.end(); i++)
     {
-        if(distance((*i)->getX(), (*i)->getY(), frackManPointer->getX(), frackManPointer->getY()) <= 6.0)
+        if(distance((*i)->getX(), (*i)->getY(), x, y) <= 6.0)
         {
             return false;
         }
@@ -254,15 +336,45 @@ bool StudentWorld::checkEucDistance(int x, int y)
     return true;
 }
 
-//find empty coordinates according to the spec
-void StudentWorld::findCoordinates(int &x, int &y, bool dirtPresent)
+/*bool StudentWorld::canBePlaced(int x, int y)
 {
+
+    if(checkEucDistance(x, y) == false)
+    {
+        return false;
+    }
+    if((x>= 27 && x<= 33 &&y>=4) || x<VIEW_WIDTH-4 || y>VIEW_HEIGHT-8)
+    {
+        return false;
+    }
+    return true;
+}*/
+
+bool StudentWorld::allDirt(int x, int y) const
+{
+    for(int i = x; i<=x+3; i++)
+    {
+        for(int j = y; j<= y+3; j++)
+        {
+            if(!dirtArray[i][j]->isAlive() || !dirtArray[i][j] ->isVisible())
+            {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+//find empty coordinates according to the spec
+void StudentWorld::findCoordinates(int &x, int &y)
+{
+ 
     do
     {
         x = rand()%(VIEW_WIDTH-4);
-        y = rand()% (VIEW_HEIGHT - 4);
-        
-    }while(noDirt(x, y) == dirtPresent || checkEucDistance(x, y) == false);
+        y = rand()% (VIEW_HEIGHT - 8);
+        //check if the object can be present in the shaft or top row or not
+    }while(allDirt(x, y) == false || checkEucDistance(x, y) == false );
 }
 
 //add a barrel to the game
@@ -271,10 +383,7 @@ void StudentWorld::addBarrels()
     for(int i = 0; i<barrels; i++)
     {
         int x, y;
-        do
-        {
-            findCoordinates(x, y, true);
-        }while(noDirt(x, y) == true);
+        findCoordinates(x, y);
         Actor* newItem = new Barrel(x, y, this, frackManPointer);
         objects.push_back(newItem);
     }
@@ -286,10 +395,8 @@ void StudentWorld::addNuggets()
     for(int i = 0; i<nuggets; i++)
     {
         int x, y;
-        do
-        {
-            findCoordinates(x, y, true);
-        }while(noDirt(x, y) == true);
+        findCoordinates(x, y);
+        //since gold nuggets to be burried in the dirt
         Actor* newItem = new GoldNugget(x, y, this, false, frackManPointer);
         objects.push_back(newItem);
     }
@@ -301,10 +408,7 @@ void StudentWorld::addBoulders()
     for(int i = 0; i<boulders; i++)
     {
         int x, y;
-        do
-        {
-            findCoordinates(x, y, true);
-        }while(noDirt(x, y) == true);
+        findCoordinates(x, y);
         Actor* newItem = new Boulder(x, y, this);
         removeDirt(x, y, x+3, y+3);
         objects.push_back(newItem);
@@ -335,27 +439,27 @@ void StudentWorld::sonarChargeUsed()
     }
 }
 
-void StudentWorld::squirtUsed(string direction)
+void StudentWorld::squirtUsed(GraphObject::Direction d)
 {
     //TODO: CHECK FOR CORRECT INITIALIZATION POSITION
     playSound(SOUND_PLAYER_SQUIRT);
     Actor* newSquirt;
-    if(direction == "left")
+    if(d == GraphObject::left)
     {
-        newSquirt = new Squirt(frackManPointer->getX(), frackManPointer->getY(),this, frackManPointer->getDirection());
+        newSquirt = new Squirt(frackManPointer->getX(), frackManPointer->getY(),this, d);
         
     }
-    else if(direction == "right")
+    else if(d == GraphObject::right)
     {
-        newSquirt = new Squirt(frackManPointer->getX(), frackManPointer->getY(), this, frackManPointer->getDirection());
+        newSquirt = new Squirt(frackManPointer->getX()+2, frackManPointer->getY(), this, d);
     }
-    else if(direction == "up")
+    else if(d == GraphObject::up)
     {
-        newSquirt = new Squirt(frackManPointer->getX(), frackManPointer->getY(), this, frackManPointer->getDirection());
+        newSquirt = new Squirt(frackManPointer->getX()+2, frackManPointer->getY(), this, d);
     }
     else
     {
-        newSquirt = new Squirt(frackManPointer->getX(), frackManPointer->getY(), this, frackManPointer->getDirection());
+        newSquirt = new Squirt(frackManPointer->getX(), frackManPointer->getY(), this, d);
     }
     objects.push_back(newSquirt);
 }
@@ -366,21 +470,119 @@ void StudentWorld::dropNugget()
     objects.push_back(newItem);
 }
 
+
+bool StudentWorld::canActorMoveTo(Actor* a, int startX, int startY, int endX, int endY) const
+{
+
+    if(abs(startX - endX)<4.0)
+    {
+        if(startX>endX)
+        {
+            
+            for(int i = startY; i>=endY;i-- )
+            {
+                if(canActorMoveTo(a, startX, i-1)==false)
+                {
+                    return false;
+                }
+            }
+        }
+        else
+        {
+            for(int i = startY; i<= endY;i++ )
+            {
+                if(canActorMoveTo(a, startX, i+1)==false)
+                {
+                    return false;
+                }
+            }
+        }
+        
+    }
+    if(abs(startY - endY)<4.0)
+    {
+        if(startY>endY)
+        {
+            for(int i = startX; i>=endX; i--)
+            {
+                if(canActorMoveTo(a, i-1, startY) == false)
+                {
+                    return false;
+                }
+            }
+        }
+        
+        else
+        {
+            for(int i = startX; i<=endX; i++)
+            {
+                if(canActorMoveTo(a, i+1, startY) == false)
+                {
+                    return false;
+                }
+            }
+        }
+        
+        
+    }
+    return true;
+}
+
+bool StudentWorld::checkLineOfSight(Actor* a)
+{
+    int fmx = frackManPointer->getX();
+    int fmy = frackManPointer->getY();
+    int ax = a->getX();
+    int ay = a->getY();
+    if(fabs(fmx-ax) <= 4.0 || fabs(fmy-ay) <= 0) //TODO: Change to <=4.0
+    {
+        if(distance(fmx, fmy, ax, ay)>4.0)
+        {
+            if(canActorMoveTo(a,ax, ay, fmx, fmy))
+            {
+                if(fabs(fmx-ax)<=4.0 && fmy> ay)
+                {
+                    a->setDirection(GraphObject::up);
+                }
+                else if(fabs(fmx-ax)<=4.0 )
+                {
+                    a->setDirection(GraphObject::down);
+                }
+                else
+                {
+                    if(fmx>ax)
+                    {
+                        a->setDirection(GraphObject::right);
+                    }
+                    else
+                    {
+                        a->setDirection(GraphObject::left);
+                    }
+                }
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 bool StudentWorld::canActorMoveTo(Actor* a, int x, int y) const
 {
-    //TODO: Change the implementation of dirt
-    //TODO: Falling down of boulder
-    if(dirtAt(x, y) == true && a->canDigThroughDirt() == false)
+    if(noDirt(x, y) == true && a->canDigThroughDirt() == false)
     {
         return false;
     }
     for(int i = 0; i<objects.size(); i++)
     {
+        if(objects[i]->canAnnoyFrackMan() == true && distance(objects[i]->getX(), objects[i]->getY() , frackManPointer->getX(), frackManPointer->getY())<4.0)
+        {
+            frackManPointer->annoy(objects[i]->getAnnoyancePoints());
+        }
         if(objects[i] == a)
         {
             continue;
         }
-        if(fabs(x - objects[i]->getX()) < 4.0 && fabs(y - objects[i]->getY()) < 4.0)
+        if( distance(x,y,objects[i]->getX(), objects[i]->getY())<4.0)
         {
             if(objects[i]->canActorsPassThroughMe() == false)
             {
@@ -418,6 +620,8 @@ int StudentWorld::move()
         }
     }
     addNewItem();
+    
+    
     
     removeDeadGameObjects();
     

@@ -51,7 +51,7 @@ bool Actor::canPickThingsUp() const
 
 bool Actor::moveToIfPossible(int x, int y)
 {
-    if(x>= VIEW_WIDTH || y>= VIEW_HEIGHT - 4 || x< 0 || y< 0)
+    if(x> VIEW_WIDTH -4 || y> VIEW_HEIGHT-4 || x< 0 || y< 0)
     {
         return false;
     }
@@ -196,7 +196,11 @@ bool Boulder::canActorsPassThroughMe() const
 
 bool Boulder::canAnnoyFrackMan() const
 {
-    return true;
+    if(fallingState == true)
+    {
+        return true;
+    }
+    return false;
 }
 
 void Boulder::doSomething()
@@ -207,7 +211,7 @@ void Boulder::doSomething()
     {
         return;
     }
-    if(checkDirtUnder(x, y) == true)
+    if(checkDirtUnder(x, y) == true && fallingState == false)
     {
         return;
     }
@@ -234,18 +238,12 @@ void Boulder::doSomething()
     
     if(fallingState == true)
     {
-        FrackMan* frackMan = getStudentWorld()->getFrackMan();
+        //TODO: change implementation to can move to
         if(checkDirtUnder(x, y) == true || x == 0)
         {
             fallingState = false;
             setVisible(false);
             setAlive(false);
-        }
-        else if(fabs(x - frackMan->getX() )< 4.0 && frackMan->getY() == y-1)
-        {
-            setVisible(false);
-            setAlive(false);
-            frackMan->annoy(100);
         }
         else
         {
@@ -382,7 +380,7 @@ void GoldNugget::doSomething()
     }
     if(x == 0)
     {
-        getFrackMan()->setGold(1);
+        getFrackMan()->addGold();
         return;
     }
     if(m_temporary == true && isAlive() && tickCount> 0)
@@ -426,12 +424,83 @@ void WaterPool::doSomething()
     }
 }
 
+//Agent Class
+Agent::Agent(StudentWorld* world, int startX, int startY, Direction startDir, int imageID, unsigned int hitPoints)
+:Actor(imageID, startX, startY,world, startDir, 1.0, 0)
+{
+    m_hitPoints = hitPoints;
+}
+
+//returns false if the actor has died. returns true otherwise
+bool Agent::annoy(unsigned int amt)
+{
+    m_hitPoints-= amt;
+    if(m_hitPoints <= 0)
+    {
+        setAlive(false);
+        setVisible(false);
+        return false;
+    }
+    return true;
+}
+
+bool Agent::canMoveInDirection(Direction d)
+{
+    int x = getX();
+    int y = getY();
+    if(d == left && moveToIfPossible(x-1, y))
+        return true;
+    if(d == right && moveToIfPossible(x+1, y))
+        return true;
+    if(d == up && moveToIfPossible(x, y+1))
+        return true;
+    if(d == down && moveToIfPossible(x, y-1))
+        return true;
+    return false;
+}
+
+void Agent::moveInDirection()
+{
+    int x = getX();
+    int y = getY();
+    Direction directionToMoveIn = getDirection();
+    if(directionToMoveIn == down)
+    {
+        if(moveToIfPossible(x, y-1) == true)
+        {
+            moveTo(x, y-1);
+            
+        }
+    }
+    else if(directionToMoveIn == up )
+    {
+        if(moveToIfPossible(x, y+1) == true)
+        {
+            moveTo(x , y+1);
+            
+        }
+    }
+    else if(directionToMoveIn == left)
+    {
+        if(moveToIfPossible(x-1, y)== true)
+        {
+            moveTo(x-1, y);
+        }
+    }
+    else if(directionToMoveIn == right)
+    {
+        if(moveToIfPossible(x+1, y)== true)
+        {
+            moveTo(x+1, y);
+        }
+    }
+}
+
 //frackMan constructor and methods
 FrackMan::FrackMan(int x, int y, StudentWorld* sw)
-:Actor(IID_PLAYER, x,y, sw, right, 1.0, 0)
+:Agent(sw, x,y, right, IID_PLAYER, 100)
 {
     setDirection(right);
-    health = 100;
     hitPoints = 10;
     goldNuggets = 0;
     sonarCharges = 1;
@@ -485,22 +554,7 @@ void FrackMan::pressKey(int key)
             return;
         }
         squirtUnits--;
-        if(getDirection() == left)
-        {
-            getStudentWorld()->squirtUsed("left");
-        }
-        else if(getDirection() == right)
-        {
-            getStudentWorld()->squirtUsed("right");
-        }
-        else if(getDirection() == up)
-        {
-            getStudentWorld()->squirtUsed("up");
-        }
-        else
-        {
-            getStudentWorld()->squirtUsed("down");
-        }
+        getStudentWorld()->squirtUsed(getDirection());
         
     }
     else if(key == KEY_PRESS_TAB)
@@ -516,11 +570,12 @@ void FrackMan::pressKey(int key)
 
 void FrackMan::annoy(int amt)
 {
-    health -= amt;
-    if(health <= 0)
+    hitPoints -= amt;
+    if(hitPoints <= 0)
     {
         setAlive(false);
         setVisible(false);
+        getStudentWorld()->playSound(SOUND_PLAYER_GIVE_UP);
     }
 }
 
@@ -532,69 +587,18 @@ void FrackMan::doSomething()
     }
     else
     {
-        int x = getX();
-        int y = getY();
-        Direction directionToMoveIn = getDirection();
         if(movePending == true)
         {
             
-            if(directionToMoveIn == down)
-            {
-                if(moveToIfPossible(x, y-1) == true)
-                {
-                    moveTo(x, y-1);
-                   
-                }
-                else
-                {
-                    moveTo(x, y);
-                   
-                }
-                movePending = false;
-            }
-            else if(directionToMoveIn == up )
-            {
-                if(moveToIfPossible(x, y+1) == true)
-                {
-                    moveTo(x , y+1);
-                    
-                }
-                else
-                {
-                    moveTo(x, y);
-                    
-                }
-                movePending = false;
-            }
-            else if(directionToMoveIn == left)
-            {
-                if(x!= 0)
-                {
-                    moveTo(x-1, y);
-                }
-                else
-                {
-                    moveTo(x, y);
-                }
-                movePending = false;
-            }
-            else if(directionToMoveIn == right)
-            {
-                if(x!= 60)
-                {
-                    moveTo(x+1, y);
-                }
-                else
-                {
-                    moveTo(x, y);
-                }
-                movePending = false;
-            }
+            moveInDirection();
+            movePending = false;
             
         }
-        if(getHealth() == 0)
+        if(getHitPoints() == 0)
         {
             setAlive(false);
+            setVisible(false);
+            getStudentWorld()->playSound(SOUND_PLAYER_GIVE_UP);
             return;
         }
         
@@ -603,3 +607,165 @@ void FrackMan::doSomething()
 
 
 
+//Protester Classes
+// score is the amt by which frackman's points increase if he kills protester
+Protester::Protester(StudentWorld* world, int startX, int startY, int imageID, unsigned int hitPoints, unsigned int score)
+:Agent(world, startX, startY, left, imageID, hitPoints)
+{
+    setVisible(true);
+    setAlive(true);
+    m_hitPoints = hitPoints;
+}
+
+bool Protester::annoy(unsigned int amt)
+{
+    m_hitPoints-= amt;
+    if(m_hitPoints<=0)
+    {
+        getStudentWorld()->playSound(SOUND_PROTESTER_GIVE_UP);
+        //setMustLeaveOilField();
+        return true;
+    }
+    else
+    {
+        getStudentWorld()->playSound(SOUND_PROTESTER_ANNOYED);
+    }
+    return false;
+}
+
+RegularProtester::RegularProtester(StudentWorld* world, int startX, int startY)
+:Protester(world, startX, startY, IID_PROTESTER, 5, 20) //TODO: check if 20 is correct
+{
+    stepsToMove = rand()%53 + 8; //generates a number between 8 and 60 inclusive
+    leaveOilFieldState = false;
+    level = getStudentWorld()->getLevel();
+    ticksToWait = max(0, 3- (level/4));
+    ticksSinceLastShout = 15;
+}
+
+void RegularProtester::changeDirection()
+{
+    stepsToMove = 0;
+    Direction dir = getDirection();
+    if(getStudentWorld()->checkLineOfSight(this) == false)
+    {
+        do
+        {
+            int randomNo = rand()%4;
+            if(randomNo == 0)
+            {
+                dir = right;
+            }
+            else if(randomNo == 1)
+            {
+                dir = left;
+            }
+            else if(randomNo == 2)
+            {
+                dir = up;
+            }
+            else
+            {
+                dir = down;
+            }
+            //set a new direction
+            //change steps to move in to random number
+        }while(canMoveInDirection(dir) == false);
+    }
+    setDirection(dir);
+    stepsToMove = rand()%53 + 8;
+}
+
+bool RegularProtester::canAnnoyFrackMan() const
+{
+    if(restingTicks > 0 || ticksToWait >0)
+    {
+        return false;
+    }
+    return true;
+}
+
+void RegularProtester::doSomething()
+{
+    
+    if(isAlive() == false)
+    {
+        return;
+    }
+    
+    if(stepsToMove == 0)
+    {
+        changeDirection();
+    }
+    
+    //TODO: Possible bug with this set of if statements
+    if(ticksToWait > 0 && restingTicks > 0)
+    {
+        ticksToWait--;
+        restingTicks--;
+        return;
+    }
+    else if(ticksToWait>0)
+    {
+        ticksToWait--;
+        return;
+    }
+    else if(restingTicks > 0)
+    {
+        restingTicks--;
+        return;
+    }
+    if(ticksToWait == 0)
+    {
+        ticksToWait = max(0, 3- (level/4));
+    }
+    
+    /*if(leaveOilFieldState == true) //TODO: Can be moved to parent class
+    {
+        
+    }*/
+    if(getStudentWorld()->getFrackManDistance(getX(), getY())<4.0 && ticksSinceLastShout>= 15 && restingTicks<= 0)
+    {
+        getStudentWorld()->playSound(SOUND_PROTESTER_YELL);
+        getStudentWorld()->annoyFrackMan(getAnnoyancePoints());
+        ticksSinceLastShout = 0;
+        restingTicks = max(50, 100- level*10);
+        return;
+    }
+    else
+    {
+        ticksSinceLastShout++;
+        
+    }
+    /*setDirection(left);
+    stepsToMove = 50;
+    moveInDirection();*/
+    
+    
+    if(getStudentWorld()->checkLineOfSight(this))
+    {
+        moveInDirection();
+        stepsToMove = 0;
+        return;
+    }
+    if(stepsToMove <= 0)
+    {
+        changeDirection();
+    }
+    
+    if(canMoveInDirection(getDirection()) == true)
+    {
+        moveInDirection();
+    }
+    else
+    {
+        stepsToMove = 0;
+    }
+    
+    /*
+        if the object cannot pass through another object, then the first object annoys the second object. In case of boulders, nothing happens but in case of protestors their annoy function is called which would decrease their hit points
+     
+     */
+    
+    
+}
