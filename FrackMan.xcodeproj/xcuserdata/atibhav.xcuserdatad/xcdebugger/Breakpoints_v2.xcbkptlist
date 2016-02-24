@@ -10,11 +10,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "FrackMan/StudentWorld.cpp"
-            timestampString = "477953471.784601"
+            timestampString = "477970311.154308"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "663"
-            endingLineNumber = "663"
+            startingLineNumber = "705"
+            endingLineNumber = "705"
             landmarkName = "StudentWorld::cleanUp()"
             landmarkType = "5">
          </BreakpointContent>
@@ -26,11 +26,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "FrackMan/StudentWorld.cpp"
-            timestampString = "477953471.784601"
+            timestampString = "477970311.154308"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "573"
-            endingLineNumber = "573"
+            startingLineNumber = "615"
+            endingLineNumber = "615"
             landmarkName = "StudentWorld::canActorMoveTo(Actor* a, int x, int y)"
             landmarkType = "5">
          </BreakpointContent>
@@ -42,11 +42,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "FrackMan/Actor.h"
-            timestampString = "477947912.61052"
+            timestampString = "477969952.027557"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "181"
-            endingLineNumber = "181"
+            startingLineNumber = "188"
+            endingLineNumber = "188"
             landmarkName = "canActorsPassThroughMe()"
             landmarkType = "5">
          </BreakpointContent>
@@ -74,11 +74,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "FrackMan/StudentWorld.cpp"
-            timestampString = "477953471.784601"
+            timestampString = "477970311.154308"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "587"
-            endingLineNumber = "587"
+            startingLineNumber = "629"
+            endingLineNumber = "629"
             landmarkName = "StudentWorld::canActorMoveTo(Actor* a, int x, int y)"
             landmarkType = "5">
          </BreakpointContent>
@@ -90,11 +90,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "FrackMan/StudentWorld.cpp"
-            timestampString = "477953471.784601"
+            timestampString = "477970311.154308"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "589"
-            endingLineNumber = "589"
+            startingLineNumber = "631"
+            endingLineNumber = "631"
             landmarkName = "StudentWorld::canActorMoveTo(Actor* a, int x, int y)"
             landmarkType = "5">
          </BreakpointContent>
@@ -170,11 +170,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "FrackMan/StudentWorld.cpp"
-            timestampString = "477953471.784601"
+            timestampString = "477970311.154308"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "585"
-            endingLineNumber = "585"
+            startingLineNumber = "627"
+            endingLineNumber = "627"
             landmarkName = "StudentWorld::canActorMoveTo(Actor* a, int x, int y)"
             landmarkType = "5">
          </BreakpointContent>
@@ -186,11 +186,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "FrackMan/StudentWorld.cpp"
-            timestampString = "477953471.784601"
+            timestampString = "477970311.154308"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "577"
-            endingLineNumber = "577"
+            startingLineNumber = "619"
+            endingLineNumber = "619"
             landmarkName = "StudentWorld::canActorMoveTo(Actor* a, int x, int y)"
             landmarkType = "5">
          </BreakpointContent>
@@ -202,11 +202,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "FrackMan/Actor.cpp"
-            timestampString = "477949497.643295"
+            timestampString = "477963377.802511"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "620"
-            endingLineNumber = "620"
+            startingLineNumber = "642"
+            endingLineNumber = "642"
             landmarkName = "Protester::annoy(unsigned int amt)"
             landmarkType = "5">
          </BreakpointContent>
@@ -218,11 +218,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "FrackMan/Actor.cpp"
-            timestampString = "477949497.643295"
+            timestampString = "477963377.802511"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "532"
-            endingLineNumber = "532"
+            startingLineNumber = "554"
+            endingLineNumber = "554"
             landmarkName = "FrackMan::pressKey(int key)"
             landmarkType = "5">
          </BreakpointContent>
@@ -234,11 +234,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "FrackMan/StudentWorld.cpp"
-            timestampString = "477953471.784601"
+            timestampString = "477970311.154308"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "579"
-            endingLineNumber = "579"
+            startingLineNumber = "621"
+            endingLineNumber = "621"
             landmarkName = "StudentWorld::canActorMoveTo(Actor* a, int x, int y)"
             landmarkType = "5">
          </BreakpointContent>
@@ -250,11 +250,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "FrackMan/Actor.cpp"
-            timestampString = "477949497.643295"
+            timestampString = "477969952.027557"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "745"
-            endingLineNumber = "745"
+            startingLineNumber = "841"
+            endingLineNumber = "841"
             landmarkName = "RegularProtester::doSomething()"
             landmarkType = "5">
          </BreakpointContent>
@@ -266,11 +266,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "FrackMan/Actor.cpp"
-            timestampString = "477950167.085244"
+            timestampString = "477969952.027557"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "650"
-            endingLineNumber = "650"
+            startingLineNumber = "708"
+            endingLineNumber = "708"
             landmarkName = "RegularProtester::changeDirection()"
             landmarkType = "5">
          </BreakpointContent>
@@ -282,12 +282,156 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "FrackMan/StudentWorld.cpp"
-            timestampString = "477953471.784601"
+            timestampString = "477970311.154308"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "482"
-            endingLineNumber = "482"
+            startingLineNumber = "503"
+            endingLineNumber = "503"
             landmarkName = "StudentWorld::canActorMoveTo(Actor* a, int startX, int startY, int endX, int endY)"
+            landmarkType = "5">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "FrackMan/Actor.cpp"
+            timestampString = "477963377.802511"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "451"
+            endingLineNumber = "451"
+            landmarkName = "Agent::canPickThingsUp()"
+            landmarkType = "5">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "FrackMan/Actor.cpp"
+            timestampString = "477969952.027557"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "797"
+            endingLineNumber = "797"
+            landmarkName = "RegularProtester::doSomething()"
+            landmarkType = "5">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "FrackMan/Actor.cpp"
+            timestampString = "477963377.802511"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "469"
+            endingLineNumber = "469"
+            landmarkName = "Agent::canMoveInDirection(Direction d)"
+            landmarkType = "5">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "FrackMan/Actor.cpp"
+            timestampString = "477969952.027557"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "721"
+            endingLineNumber = "721"
+            landmarkName = "RegularProtester::changeDirection()"
+            landmarkType = "5">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "FrackMan/Actor.cpp"
+            timestampString = "477963504.312745"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "303"
+            endingLineNumber = "303"
+            landmarkName = "Goodie::activate(bool permanent, int SoundID, int pointsIncrease)"
+            landmarkType = "5">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "FrackMan/StudentWorld.cpp"
+            timestampString = "477970311.154308"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "161"
+            endingLineNumber = "161"
+            landmarkName = "StudentWorld::checkProtesterDistance(Actor* a, int x, int y)"
+            landmarkType = "5">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "FrackMan/StudentWorld.cpp"
+            timestampString = "477964301.72767"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "154"
+            endingLineNumber = "154"
+            landmarkName = "StudentWorld::checkProtesterDistance(Actor* a, int x, int y)"
+            landmarkType = "5">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "FrackMan/StudentWorld.cpp"
+            timestampString = "477964301.72767"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "152"
+            endingLineNumber = "152"
+            landmarkName = "StudentWorld::checkProtesterDistance(Actor* a, int x, int y)"
+            landmarkType = "5">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "FrackMan/Actor.cpp"
+            timestampString = "477971091.014562"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "862"
+            endingLineNumber = "862"
+            landmarkName = "RegularProtester::doSomething()"
             landmarkType = "5">
          </BreakpointContent>
       </BreakpointProxy>

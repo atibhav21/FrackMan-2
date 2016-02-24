@@ -53,11 +53,14 @@ public:
     //add a new Item to the grid
     void addNewItem();
     
+    //check the distance of protesters from the gold nugget
+    bool checkProtesterDistance(Actor* a, int x, int y);
+    
     bool dirtAt(int x,int y) const;
     
     void decBarrels() {barrels--;}
     
-    bool canBePlaced(int x, int y);
+    bool facingFrackMan(Actor* a) const;
     
     //set the game status line
     void setDisplayText();

@@ -19,6 +19,8 @@ public:
     
     void setAlive(bool value);
     
+    virtual bool annoy(unsigned int amount) {return false;}
+    
     StudentWorld* getStudentWorld() const;
     
     // Can other actors pass through this actor?
@@ -36,7 +38,7 @@ public:
     virtual int getAnnoyancePoints() const {return 0;}
     
     // checks if object can move to x, y
-    bool moveToIfPossible(int x, int y);
+    bool moveToIfPossible(int x, int y) ;
     
     virtual ~Actor() {}
 private:
@@ -57,7 +59,7 @@ public:
     unsigned int getHitPoints() const {return m_hitPoints;}
     
     virtual bool annoy(unsigned int amount);
-    virtual bool canPickThingsUp() const {return true; }
+    virtual bool canPickThingsUp() const ;
     virtual bool canMoveInDirection(Direction d);
     virtual void moveInDirection();
 private:
@@ -76,17 +78,19 @@ public:
     virtual bool canAnnoyFrackMan() const {return true; }
     virtual int getAnnoyancePoints() const {return 0;}
     
+    virtual bool isViableDirection(Direction d) ;
+    
     // Set state to having given up protest
-    //void setMustLeaveOilField() {}
+    void setMustLeaveOilField() {leaveOilFieldState = true;}
     
     //check if protester is in leave oil field state
-    void getMustLeaveOilField();
+    bool getMustLeaveOilField() {return leaveOilFieldState; }
     
     // Set number of ticks until next move
     void setTicksToNextMove();
 private:
     int m_gold;
-    
+    bool leaveOilFieldState;
     int m_hitPoints;
 };
 
@@ -98,13 +102,16 @@ public:
     virtual void changeDirection();
     virtual int getAnnoyancePoints() const {return 2;}
     virtual bool canAnnoyFrackMan() const;
+    bool isPerpendicular(Direction d1, Direction d2) const;
+    void getPerpendicularDirections(Direction& d1, Direction& d2);
 private:
     int stepsToMove;
-    bool leaveOilFieldState;
+    
     int ticksToWait;
     int level;
     int ticksSinceLastShout;
     int restingTicks;
+    int lastPerpendicularTurn;
 };
 
 class FrackMan: public Agent

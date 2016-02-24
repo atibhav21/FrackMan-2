@@ -144,9 +144,29 @@ bool StudentWorld::dirtAt(int x, int y) const
     return false;
 }
 
+bool StudentWorld::checkProtesterDistance(Actor* a, int x, int y)
+{
+    for(vector<Actor*>::iterator i = objects.begin(); i!= objects.end(); i++)
+    {
+        //i cannot be the same as the object calling function
+        //i should be able to pick things up
+        if((*i)->canPickThingsUp() == true)
+        {
+            if(distance((*i)->getX(), (*i)->getY(), x, y) <= 3.0)
+            {
+                //Check if it works properly or not, set in leaveOilFieldState
+                
+                return true;
+            }
+        }
+        
+    }
+    return false;
+}
+
 bool StudentWorld::noDirt(int startX, int startY) const
 {
-    if(startX>= VIEW_WIDTH-4 || startY>= VIEW_HEIGHT-8)
+    if(startX> VIEW_WIDTH-4 || startY> VIEW_HEIGHT-4)
     {
         return false;
     }
@@ -154,7 +174,7 @@ bool StudentWorld::noDirt(int startX, int startY) const
     {
         for(int j = 0; j<4; j++)
         {
-            if(dirtArray[startX+i][startY+j]->isVisible() == true)
+            if(dirtAt(startX, startY) == true)
             {
                 return false;
             }
@@ -219,6 +239,7 @@ void StudentWorld::addNewItem()
             int x, y;
             do
             {
+                //TODO: FIX
                 x = rand()%VIEW_WIDTH;
                 y = rand()% (VIEW_HEIGHT - 4);
                 
@@ -528,13 +549,34 @@ bool StudentWorld::canActorMoveTo(Actor* a, int startX, int startY, int endX, in
     return true;
 }
 
+bool StudentWorld::facingFrackMan(Actor* a) const
+{
+    if(frackManPointer->getX() >= a->getX() && a->getDirection() == GraphObject::right)
+    {
+        return true;
+    }
+    else if (frackManPointer->getX() < a->getX() && a->getDirection() == GraphObject::left)
+    {
+        return true;
+    }
+    else if(frackManPointer->getY() >= a->getY() && a->getDirection() == GraphObject::up)
+    {
+        return true;
+    }
+    else if(frackManPointer->getY() < a->getY() && a->getDirection() == GraphObject::down)
+    {
+        return true;
+    }
+    return false;
+}
+
 bool StudentWorld::checkLineOfSight(Actor* a)
 {
     int fmx = frackManPointer->getX();
     int fmy = frackManPointer->getY();
     int ax = a->getX();
     int ay = a->getY();
-    if(fabs(fmx-ax) <= 4.0 || fabs(fmy-ay) <= 0) //TODO: Change to <=4.0
+    if(fabs(fmx-ax) <= 4.0 || fabs(fmy-ay) <= 4.0) //TODO: Change to <=4.0
     {
         if(distance(fmx, fmy, ax, ay)>4.0)
         {
@@ -568,7 +610,7 @@ bool StudentWorld::checkLineOfSight(Actor* a)
 
 bool StudentWorld::canActorMoveTo(Actor* a, int x, int y) const
 {
-    if(noDirt(x, y) == true && a->canDigThroughDirt() == false)
+    if(noDirt(x, y) == false && a->canDigThroughDirt() == false)
     {
         return false;
     }

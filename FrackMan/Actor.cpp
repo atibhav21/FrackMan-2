@@ -280,14 +280,14 @@ FrackMan* Goodie::getFrackMan()
  *  returns 0 for pickedUp by frackMan, 1 for protestors, 2 for sunk in
  *        ground, 3 for nugget distance <= 4.0, 4 if object is not alive, -1 if none of the above is valid
  */
-int Goodie::activate(bool pickUpAble, int SoundID, int pointsIncrease)
+int Goodie::activate(bool permanent, int SoundID, int pointsIncrease)
 {
     if(isAlive() == false)
     {
         return 4;
     }
     double distance = sqrt( pow(FMP->getX() - getX(), 2) + pow(FMP->getY()-getY(), 2) );
-    if(pickUpAble == true && isVisible() && distance<=3.0)
+    if(permanent == true && isVisible() && distance<=3.0)
     {
         getStudentWorld()->playSound(SoundID);
         getStudentWorld()->increaseScore(pointsIncrease);
@@ -295,10 +295,18 @@ int Goodie::activate(bool pickUpAble, int SoundID, int pointsIncrease)
         setVisible(false);
         return 0;
     }
-    else if(pickUpAble == true && !isVisible() && distance<=4.0)
+    else if(permanent == true && !isVisible() && distance<=4.0)
     {
         setVisible(true);
         return 3;
+    }
+    else if(permanent == false && getStudentWorld()->checkProtesterDistance(this, getX(), getY()) == true)
+    {
+        getStudentWorld()->playSound(SOUND_PROTESTER_FOUND_GOLD);
+        getStudentWorld()->increaseScore(pointsIncrease);
+        setAlive(false);
+        setVisible(false);
+        return 1;
     }
     return -1;
 }
@@ -372,7 +380,16 @@ GoldNugget::GoldNugget(int x, int y, StudentWorld* sw, bool temporary, FrackMan*
 
 void GoldNugget::doSomething()
 {
-    int x = activate(!m_temporary, SOUND_GOT_GOODIE, 10);
+    int x;
+    if(m_temporary == false)
+    {
+        x = activate(true, SOUND_GOT_GOODIE, 10);
+    }
+    else
+    {
+        x = activate(false, SOUND_PROTESTER_FOUND_GOLD, 25);
+    }
+    
     
     if(x == 4 || x == 3)
     {
@@ -429,6 +446,11 @@ Agent::Agent(StudentWorld* world, int startX, int startY, Direction startDir, in
 :Actor(imageID, startX, startY,world, startDir, 1.0, 0)
 {
     m_hitPoints = hitPoints;
+}
+
+bool Agent::canPickThingsUp() const
+{
+    return true;
 }
 
 //returns false if the actor has died. returns true otherwise
@@ -633,11 +655,46 @@ bool Protester::annoy(unsigned int amt)
     return false;
 }
 
+bool Protester::isViableDirection(Direction d) 
+{
+    int x = getX();
+    int y = getY();
+    if( d == left)
+    {
+        if(moveToIfPossible(x-1, y) == true)
+        {
+            return true;
+        }
+    }
+    else if(d == right)
+    {
+        if(moveToIfPossible(x+1, y) == true)
+        {
+            return true;
+        }
+    }
+    else if(d == up)
+    {
+        if(moveToIfPossible(x, y+1) == true)
+        {
+            return true;
+        }
+    }
+    else if(d == down)
+    {
+        if(moveToIfPossible(x, y-1) == true)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 RegularProtester::RegularProtester(StudentWorld* world, int startX, int startY)
 :Protester(world, startX, startY, IID_PROTESTER, 5, 20) //TODO: check if 20 is correct
 {
     stepsToMove = rand()%53 + 8; //generates a number between 8 and 60 inclusive
-    leaveOilFieldState = false;
+
     level = getStudentWorld()->getLevel();
     ticksToWait = max(0, 3- (level/4));
     ticksSinceLastShout = 15;
@@ -646,6 +703,7 @@ RegularProtester::RegularProtester(StudentWorld* world, int startX, int startY)
 void RegularProtester::changeDirection()
 {
     stepsToMove = 0;
+    Direction currentDirection = getDirection();
     Direction dir = getDirection();
     if(getStudentWorld()->checkLineOfSight(this) == false)
     {
@@ -673,6 +731,10 @@ void RegularProtester::changeDirection()
         }while(canMoveInDirection(dir) == false);
     }
     setDirection(dir);
+    if(isPerpendicular(currentDirection, dir) == true)
+    {
+        lastPerpendicularTurn = 0;
+    }
     stepsToMove = rand()%53 + 8;
 }
 
@@ -683,6 +745,39 @@ bool RegularProtester::canAnnoyFrackMan() const
         return false;
     }
     return true;
+}
+
+void RegularProtester::getPerpendicularDirections(Direction& d1, Direction& d2)
+{
+    if(getDirection() == up || getDirection() == down)
+    {
+        d1 = left;
+        d2 = right;
+    }
+    else if(getDirection() == left || getDirection() == right)
+    {
+        d1 = up;
+        d2 = down;
+    }
+}
+
+bool RegularProtester::isPerpendicular(Direction d1, Direction d2) const
+{
+    if(d1 == left || d1 == right)
+    {
+        if(d2 == up || d2 == down)
+        {
+            return true;
+        }
+    }
+    else if(d1 == up || d1 == down)
+    {
+        if(d2 == left || d2 == right)
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 void RegularProtester::doSomething()
@@ -724,8 +819,9 @@ void RegularProtester::doSomething()
     {
         
     }*/
-    if(getStudentWorld()->getFrackManDistance(getX(), getY())<4.0 && ticksSinceLastShout>= 15 && restingTicks<= 0)
+    if(getStudentWorld()->getFrackManDistance(getX(), getY())<4.0 && ticksSinceLastShout>= 15 && restingTicks<= 0 && getStudentWorld()->facingFrackMan(this) == true)
     {
+        lastPerpendicularTurn++;
         getStudentWorld()->playSound(SOUND_PROTESTER_YELL);
         getStudentWorld()->annoyFrackMan(getAnnoyancePoints());
         ticksSinceLastShout = 0;
@@ -744,26 +840,74 @@ void RegularProtester::doSomething()
     
     if(getStudentWorld()->checkLineOfSight(this))
     {
+        if(canMoveInDirection(getDirection()) == true)
+        {
+            moveInDirection();
+            stepsToMove = 0;
+            return;
+        }
+        
+    }
+    if(stepsToMove > 0 && canMoveInDirection(getDirection()))
+    {
         moveInDirection();
-        stepsToMove = 0;
         return;
     }
-    if(stepsToMove <= 0)
+    else
     {
         changeDirection();
     }
     
-    if(canMoveInDirection(getDirection()) == true)
+    
+    Direction d1, d2;
+    getPerpendicularDirections(d1, d2);
+    Direction newDirection = getDirection();
+    if(lastPerpendicularTurn >= 200)
     {
-        moveInDirection();
+        if(isViableDirection(d1))
+        {
+            if(isViableDirection(d2))
+            {
+                //choose a random direction
+                if(rand()%2 == 0)
+                {
+                    newDirection = d1;
+                }
+                else
+                {
+                    newDirection = d2;
+                }
+            }
+            else
+            {
+                //set direction to d1
+                newDirection = d1;
+            }
+        }
+        else if(isViableDirection(d2))
+        {
+            if(!isViableDirection(d1))
+            {
+                //setDirection to d2
+                newDirection = d2;
+            }
+        }
+        
+        setDirection(newDirection);
+        stepsToMove = rand()%53 + 8;
+        lastPerpendicularTurn = 0;
     }
     else
     {
-        stepsToMove = 0;
+        lastPerpendicularTurn++;
     }
     
+    moveInDirection();
+    
+    
+
     /*
-        if the object cannot pass through another object, then the first object annoys the second object. In case of boulders, nothing happens but in case of protestors their annoy function is called which would decrease their hit points
+        implementation of squirt: if the object cannot pass through another object, then the first object annoys the second object. In case of boulders, nothing happens but in case of protestors their annoy function is called which would decrease their hit points
      
      */
     
