@@ -35,10 +35,14 @@ public:
     // Does this actor hunt the FrackMan?
     virtual bool canAnnoyFrackMan() const;
     
+    virtual void setLeaveOilFieldState()  {};
+    
     virtual int getAnnoyancePoints() const {return 0;}
     
     // checks if object can move to x, y
     bool moveToIfPossible(int x, int y) ;
+    
+    virtual int getHitPoints() {return 0; }
     
     virtual ~Actor() {}
 private:
@@ -80,8 +84,12 @@ public:
     
     virtual bool isViableDirection(Direction d) ;
     
+    virtual int getHitPoints() {return m_hitPoints; }
+    
     // Set state to having given up protest
-    void setMustLeaveOilField() {leaveOilFieldState = true;}
+    virtual void setLeaveOilFieldState();
+    
+    void followExitPath();
     
     //check if protester is in leave oil field state
     bool getMustLeaveOilField() {return leaveOilFieldState; }

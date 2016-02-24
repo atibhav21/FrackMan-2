@@ -99,8 +99,17 @@ void Squirt::doSomething()
         return;
     }
     //TODO: Check for protestor, dirt and boulder and edge of grid
+    
     int x = getX();
     int y = getY();
+    
+    if(getStudentWorld()->checkProtesterDistance(this, x, y, 0 ,2) == true)
+    {
+        setAlive(false);
+        setVisible(false);
+        return;
+    }
+    
     switch (getDirection()) {
         case left:
             if(moveToIfPossible( x-1, y) == true)
@@ -300,10 +309,9 @@ int Goodie::activate(bool permanent, int SoundID, int pointsIncrease)
         setVisible(true);
         return 3;
     }
-    else if(permanent == false && getStudentWorld()->checkProtesterDistance(this, getX(), getY()) == true)
+    else if(permanent == false && getStudentWorld()->checkProtesterDistance(this, getX(), getY(), pointsIncrease, 0) == true)
     {
         getStudentWorld()->playSound(SOUND_PROTESTER_FOUND_GOLD);
-        getStudentWorld()->increaseScore(pointsIncrease);
         setAlive(false);
         setVisible(false);
         return 1;
@@ -641,11 +649,13 @@ Protester::Protester(StudentWorld* world, int startX, int startY, int imageID, u
 
 bool Protester::annoy(unsigned int amt)
 {
+    //TODO: Check if Protester is annoyed by Boulder or by Squirt
     m_hitPoints-= amt;
     if(m_hitPoints<=0)
     {
         getStudentWorld()->playSound(SOUND_PROTESTER_GIVE_UP);
-        //setMustLeaveOilField();
+        getStudentWorld()->increaseScore(100);
+        setLeaveOilFieldState();
         return true;
     }
     else
@@ -653,6 +663,20 @@ bool Protester::annoy(unsigned int amt)
         getStudentWorld()->playSound(SOUND_PROTESTER_ANNOYED);
     }
     return false;
+}
+
+void Protester::setLeaveOilFieldState()
+{
+    leaveOilFieldState = true;
+    getStudentWorld()->playSound(SOUND_PROTESTER_FOUND_GOLD);
+}
+
+void Protester::followExitPath()
+{
+    Direction d;
+    getStudentWorld()->getExitDirection(getX(), getY(),d);
+    setDirection(d);
+    moveInDirection();
 }
 
 bool Protester::isViableDirection(Direction d) 
@@ -780,6 +804,7 @@ bool RegularProtester::isPerpendicular(Direction d1, Direction d2) const
     return false;
 }
 
+
 void RegularProtester::doSomething()
 {
     
@@ -815,10 +840,11 @@ void RegularProtester::doSomething()
         ticksToWait = max(0, 3- (level/4));
     }
     
-    /*if(leaveOilFieldState == true) //TODO: Can be moved to parent class
+    if(getMustLeaveOilField() == true) //TODO: Can be moved to parent class
     {
-        
-    }*/
+        followExitPath();
+        return;
+    }
     if(getStudentWorld()->getFrackManDistance(getX(), getY())<4.0 && ticksSinceLastShout>= 15 && restingTicks<= 0 && getStudentWorld()->facingFrackMan(this) == true)
     {
         lastPerpendicularTurn++;

@@ -42,6 +42,8 @@ public:
     void removeDirt(int startX, int startY, int endX, int endY);
     
     //check if there is no dirt between startX, startY 4x4 square
+    //returns true if there is dirt in 4x4 grid
+    //returns false otherwise
     bool noDirt(int startX, int startY) const;
     
     //check if there are no objects in 6 units of distance
@@ -54,7 +56,7 @@ public:
     void addNewItem();
     
     //check the distance of protesters from the gold nugget
-    bool checkProtesterDistance(Actor* a, int x, int y);
+    bool checkProtesterDistance(Actor* a, int x, int y, int increasePoints, int annoyAmt);
     
     bool dirtAt(int x,int y) const;
     
@@ -76,6 +78,8 @@ public:
     void annoyFrackMan(int amt);
     
     double getFrackManDistance(int x, int y) const;
+    
+    void getExitDirection(int x, int y, GraphObject::Direction& d);
     
     //add barrels to the oil field
     void addBarrels();
@@ -142,7 +146,7 @@ private:
     int boulders;
     vector<Actor*> objects;
     FrackMan* frackManPointer;
-    Cell exitGrid[VIEW_WIDTH/4][VIEW_HEIGHT/4];
+    Cell exitGrid[VIEW_WIDTH][VIEW_HEIGHT];
     Dirt* dirtArray[VIEW_WIDTH][VIEW_HEIGHT-4];
 };
 

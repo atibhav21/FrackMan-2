@@ -144,7 +144,7 @@ bool StudentWorld::dirtAt(int x, int y) const
     return false;
 }
 
-bool StudentWorld::checkProtesterDistance(Actor* a, int x, int y)
+bool StudentWorld::checkProtesterDistance(Actor* a, int x, int y, int increasePoints, int annoyAmt)
 {
     for(vector<Actor*>::iterator i = objects.begin(); i!= objects.end(); i++)
     {
@@ -155,13 +155,24 @@ bool StudentWorld::checkProtesterDistance(Actor* a, int x, int y)
             if(distance((*i)->getX(), (*i)->getY(), x, y) <= 3.0)
             {
                 //Check if it works properly or not, set in leaveOilFieldState
-                
+                (*i)->annoy(annoyAmt);
+                cerr<<(*i)->getHitPoints();
+                if(annoyAmt == 0) // is a Gold Nugget and Protester needs to be set in a bribed state
+                {
+                    (*i)->setLeaveOilFieldState();
+                }
+                increaseScore(increasePoints);
                 return true;
             }
         }
         
     }
     return false;
+}
+
+void StudentWorld::getExitDirection(int x, int y, GraphObject::Direction& d)
+{
+    
 }
 
 bool StudentWorld::noDirt(int startX, int startY) const
@@ -174,7 +185,7 @@ bool StudentWorld::noDirt(int startX, int startY) const
     {
         for(int j = 0; j<4; j++)
         {
-            if(dirtAt(startX, startY) == true)
+            if(dirtAt(startX + i, startY + j) == true)
             {
                 return false;
             }
@@ -495,11 +506,11 @@ void StudentWorld::dropNugget()
 bool StudentWorld::canActorMoveTo(Actor* a, int startX, int startY, int endX, int endY) const
 {
 
-    if(abs(startX - endX)<4.0)
+    if(abs(startX - endX)<4.0) //means you have to move in vertical direction
     {
-        if(startX>endX)
+        if(startY>endY)
         {
-            
+            //move down
             for(int i = startY; i>=endY;i-- )
             {
                 if(canActorMoveTo(a, startX, i-1)==false)
@@ -507,8 +518,9 @@ bool StudentWorld::canActorMoveTo(Actor* a, int startX, int startY, int endX, in
                     return false;
                 }
             }
+            return true;
         }
-        else
+        else if(startY<= endY)
         {
             for(int i = startY; i<= endY;i++ )
             {
@@ -517,13 +529,15 @@ bool StudentWorld::canActorMoveTo(Actor* a, int startX, int startY, int endX, in
                     return false;
                 }
             }
+            return true;
         }
         
     }
     if(abs(startY - endY)<4.0)
     {
-        if(startY>endY)
+        if(startX>endX)
         {
+            //move left
             for(int i = startX; i>=endX; i--)
             {
                 if(canActorMoveTo(a, i-1, startY) == false)
@@ -531,6 +545,7 @@ bool StudentWorld::canActorMoveTo(Actor* a, int startX, int startY, int endX, in
                     return false;
                 }
             }
+            return true;
         }
         
         else
@@ -542,11 +557,12 @@ bool StudentWorld::canActorMoveTo(Actor* a, int startX, int startY, int endX, in
                     return false;
                 }
             }
+            return true;
         }
         
         
     }
-    return true;
+    return false;
 }
 
 bool StudentWorld::facingFrackMan(Actor* a) const
