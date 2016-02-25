@@ -42,8 +42,6 @@ public:
     // checks if object can move to x, y
     bool moveToIfPossible(int x, int y) ;
     
-    virtual int getHitPoints() {return 0; }
-    
     virtual ~Actor() {}
 private:
     bool m_isAlive;
@@ -82,12 +80,12 @@ public:
     virtual bool canAnnoyFrackMan() const {return true; }
     virtual int getAnnoyancePoints() const {return 0;}
     
+    virtual void setStunState() {};
+    
     virtual bool isViableDirection(Direction d) ;
     
-    virtual int getHitPoints() {return m_hitPoints; }
-    
     // Set state to having given up protest
-    virtual void setLeaveOilFieldState();
+    virtual void setLeaveOilFieldState() ;
     
     void followExitPath();
     
@@ -110,6 +108,7 @@ public:
     virtual void changeDirection();
     virtual int getAnnoyancePoints() const {return 2;}
     virtual bool canAnnoyFrackMan() const;
+    virtual void setStunState();
     bool isPerpendicular(Direction d1, Direction d2) const;
     void getPerpendicularDirections(Direction& d1, Direction& d2);
 private:
@@ -200,13 +199,14 @@ public:
 class Goodie: public Actor
 {
 public:
-    Goodie(int imageID, int x, int y, StudentWorld* sw, Direction dir, double size, unsigned int depth, FrackMan* fm );
+    Goodie(int imageID, int x, int y, StudentWorld* sw, Direction dir, double size, unsigned int depth, FrackMan* fm , bool initiallyPickUpAble);
     virtual void doSomething() {}
     virtual int activate(bool pickUpAble, int SoundID, int pointsIncrease);
     FrackMan* getFrackMan();
     virtual ~Goodie() {}
 private:
     FrackMan* FMP; //frackman pointer
+    bool isPickUpAble;
 };
 
 

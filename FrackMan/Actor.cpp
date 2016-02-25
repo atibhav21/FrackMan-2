@@ -272,12 +272,13 @@ void Boulder::doSomething()
 }
 
 //Goodie Class
-Goodie::Goodie(int ImageID, int x, int y, StudentWorld* sw, Direction dir, double size, unsigned int depth, FrackMan* fm)
+Goodie::Goodie(int ImageID, int x, int y, StudentWorld* sw, Direction dir, double size, unsigned int depth, FrackMan* fm, bool inititiallyPickUpAble)
 :Actor(ImageID, x, y, sw, dir, size, depth)
 {
     setVisible(true);
     setAlive(true);
     FMP = fm;
+    isPickUpAble = inititiallyPickUpAble;
 }
 
 FrackMan* Goodie::getFrackMan()
@@ -295,8 +296,10 @@ int Goodie::activate(bool permanent, int SoundID, int pointsIncrease)
     {
         return 4;
     }
+    
+    //TODO: DEFINE PICKUPABLE FUNCTION IN CLASS GOODIE
     double distance = sqrt( pow(FMP->getX() - getX(), 2) + pow(FMP->getY()-getY(), 2) );
-    if(permanent == true && isVisible() && distance<=3.0)
+    if(permanent == true && isPickUpAble && distance<=3.0) //Change Made
     {
         getStudentWorld()->playSound(SoundID);
         getStudentWorld()->increaseScore(pointsIncrease);
@@ -304,8 +307,9 @@ int Goodie::activate(bool permanent, int SoundID, int pointsIncrease)
         setVisible(false);
         return 0;
     }
-    else if(permanent == true && !isVisible() && distance<=4.0)
+    else if(permanent == true && !isPickUpAble && distance<=4.0) //Change made
     {
+        isPickUpAble = true;
         setVisible(true);
         return 3;
     }
@@ -325,7 +329,7 @@ int Goodie::activate(bool permanent, int SoundID, int pointsIncrease)
 
 //Sonar Kit Class
 SonarKit::SonarKit(int x, int y, StudentWorld* sw, FrackMan* fm)
-:Goodie(IID_SONAR, x, y, sw, right, 1.0, 2, fm)
+:Goodie(IID_SONAR, x, y, sw, right, 1.0, 2, fm, true)
 {
     int level = getStudentWorld()->getLevel();
     tickCount = max(100, 300 - (10* level) );
@@ -353,7 +357,7 @@ void SonarKit::doSomething()
 
 //Barrel of Oil Class
 Barrel::Barrel(int x, int y, StudentWorld* sw, FrackMan* fm)
-:Goodie(IID_BARREL, x, y, sw, right, 1.0, 2, fm)
+:Goodie(IID_BARREL, x, y, sw, right, 1.0, 2, fm, false)
 {
     setAlive(true);
     setVisible(false);
@@ -375,7 +379,7 @@ void Barrel::doSomething()
 
 //Gold Nugget Class
 GoldNugget::GoldNugget(int x, int y, StudentWorld* sw, bool temporary, FrackMan* fm)
-:Goodie(IID_GOLD, x, y, sw, right, 1.0, 2, fm)
+:Goodie(IID_GOLD, x, y, sw, right, 1.0, 2, fm, false)
 {
     m_temporary = temporary; // if is temporary then pickable by protestor other wise by frackman
     setVisible(temporary);
@@ -423,7 +427,7 @@ void GoldNugget::doSomething()
 
 //Water Pool Class
 WaterPool::WaterPool(int x, int y, StudentWorld* sw, FrackMan* fm)
-:Goodie(IID_WATER_POOL, x, y, sw, right, 1.0, 2, fm)
+:Goodie(IID_WATER_POOL, x, y, sw, right, 1.0, 2, fm, true)
 {
     int level = getStudentWorld()->getLevel();
     tickCount = max(100, 300 - (10*level) );
@@ -650,6 +654,12 @@ Protester::Protester(StudentWorld* world, int startX, int startY, int imageID, u
 bool Protester::annoy(unsigned int amt)
 {
     //TODO: Check if Protester is annoyed by Boulder or by Squirt
+    if(m_hitPoints<= 0 && leaveOilFieldState == false)
+    {
+        setLeaveOilFieldState();
+        return true;
+    }
+    
     m_hitPoints-= amt;
     if(m_hitPoints<=0)
     {
@@ -661,6 +671,7 @@ bool Protester::annoy(unsigned int amt)
     else
     {
         getStudentWorld()->playSound(SOUND_PROTESTER_ANNOYED);
+        setStunState();
     }
     return false;
 }
@@ -668,13 +679,12 @@ bool Protester::annoy(unsigned int amt)
 void Protester::setLeaveOilFieldState()
 {
     leaveOilFieldState = true;
-    getStudentWorld()->playSound(SOUND_PROTESTER_FOUND_GOLD);
 }
 
 void Protester::followExitPath()
 {
-    Direction d;
-    getStudentWorld()->getExitDirection(getX(), getY(),d);
+    Direction d = getDirection();
+    getStudentWorld()->getExitDirection(getX(), getY(),d); //d is passed by reference so value is changed
     setDirection(d);
     moveInDirection();
 }
@@ -771,6 +781,11 @@ bool RegularProtester::canAnnoyFrackMan() const
     return true;
 }
 
+void RegularProtester::setStunState()
+{
+    restingTicks = max(50, 100 - level * 10);
+}
+
 void RegularProtester::getPerpendicularDirections(Direction& d1, Direction& d2)
 {
     if(getDirection() == up || getDirection() == down)
@@ -813,6 +828,8 @@ void RegularProtester::doSomething()
         return;
     }
     
+    
+    
     if(stepsToMove == 0)
     {
         changeDirection();
@@ -825,31 +842,41 @@ void RegularProtester::doSomething()
         restingTicks--;
         return;
     }
-    else if(ticksToWait>0)
+    else if(ticksToWait>0 || restingTicks > 0)
     {
-        ticksToWait--;
+        if(ticksToWait>0)
+        {
+            ticksToWait--;
+        }
+        else
+        {
+            restingTicks--;
+        }
         return;
     }
-    else if(restingTicks > 0)
-    {
-        restingTicks--;
-        return;
-    }
+    
     if(ticksToWait == 0)
     {
         ticksToWait = max(0, 3- (level/4));
     }
     
-    if(getMustLeaveOilField() == true) //TODO: Can be moved to parent class
+    if(getMustLeaveOilField() == true)
     {
         followExitPath();
+        if(getX() == 60 && getY() == 60)
+        {
+            setVisible(false);
+            setAlive(false);
+        }
         return;
     }
-    if(getStudentWorld()->getFrackManDistance(getX(), getY())<4.0 && ticksSinceLastShout>= 15 && restingTicks<= 0 && getStudentWorld()->facingFrackMan(this) == true)
+    //TODO: Protester does not stun
+    
+    if(getMustLeaveOilField() == false && getStudentWorld()->getFrackManDistance(getX(), getY())<4.0 && ticksSinceLastShout>= 15 && getStudentWorld()->facingFrackMan(this) == true)/*restingTicks<= 0*/
     {
         lastPerpendicularTurn++;
         getStudentWorld()->playSound(SOUND_PROTESTER_YELL);
-        getStudentWorld()->annoyFrackMan(getAnnoyancePoints());
+        /*getStudentWorld()->annoyFrackMan(getAnnoyancePoints());*/
         ticksSinceLastShout = 0;
         restingTicks = max(50, 100- level*10);
         return;

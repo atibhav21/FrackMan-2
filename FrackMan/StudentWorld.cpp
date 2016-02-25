@@ -27,61 +27,7 @@ StudentWorld::StudentWorld(string assetDir)
     }*/
 }
 
-/*void StudentWorld::updateExitGrid(int x, int y)
-{
-    queue<Coord> m_queue;
-    Coord a(60 , 60 , 0);
-    m_queue.push(a);
-    exitGrid[x][y].m_count = 0;
-    while(!m_queue.empty())
-    {
-        Coord mCoord(m_queue.front().x, m_queue.front().y, m_queue.front().count);
-        int m_x = m_queue.front().x / 4;
-        int m_y = m_queue.front().y / 4;
-        int m_count = m_queue.front().count;
-        m_queue.pop();
-        if(mCoord.x == x && mCoord.y == y)
-        {
-            exitGrid[x/4][y/4] = m_count;
-            return;
-        }
-        else
-        {
-            if((m_y+1) < VIEW_HEIGHT-4 && !dirtArray[m_x][m_y+1]->isVisible() && exitGrid[m_x/4][(m_y/4)+1].visited == false ) //can move north
-            {
-                Coord temp(m_x, m_y+1, m_count+1);
-                m_queue.push(temp);
-                exitGrid[m_x][m_y+1].m_count = m_count+1;
-                exitGrid[m_x][m_y+1].visited = true;
-            }
-            if((m_x+1)/4 < VIEW_WIDTH && !dirtArray[(m_x+1)/4-1][m_y/4-1]->isVisible() && exitGrid[m_x/4+1][m_y/4].visited == false ) //can move east
-            {
-                Coord temp(m_x+1, m_y, m_count+1);
-                m_queue.push(temp);
-                exitGrid[m_x+1][m_y].visited = true;
-                exitGrid[m_x+1][m_y].m_count = m_count+1;
-            }
-            
-            if((m_y-1)/4 > 0 && !dirtArray[m_x/4-1][(m_y-1)/4-1]->isVisible() && exitGrid[m_x/4][m_y/4-1].visited == false ) //can move north
-            {
-                Coord temp(m_x, m_y-1, m_count+1);
-                m_queue.push(temp);
-                exitGrid[m_x][m_y-1].visited = true;
-                exitGrid[m_x][m_y-1].m_count = m_count+1;
-            }
-            if((m_x-1)/4 > 0 && !dirtArray[(m_x-1)/4-1][m_y/4-1]->isVisible() && exitGrid[m_x/4-1][m_y/4].visited == false ) //can move west
-            {
-                Coord temp(m_x-1, m_y, m_count+1);
-                m_queue.push(temp);
-                exitGrid[m_x-1][m_y].visited = true;
-                exitGrid[m_x-1][m_y].m_count = m_count+1;
-            }
-            
-        }
-        
-    }
-    
-}*/
+
 
 /*  initialize the game
  *  intialize all the data structures required for the game
@@ -98,10 +44,15 @@ int StudentWorld::init()
     frackManPointer = new FrackMan(30,60, this);
     for(int i = 0; i<VIEW_WIDTH; i++) //x direction
     {
-        for(int j = 0; j<VIEW_HEIGHT-4; j++) //y direction
+        for(int j = 0; j<VIEW_HEIGHT; j++) //y direction
         {
             dirtArray[i][j] = new Dirt(i, j, this);
-            if(i < 30 || i > 33 ||  j<4) //creates a shaft at x values between 30 and 33
+            if(j >= 60)
+            {
+                dirtArray[i][j]->setAlive(false);
+                dirtArray[i][j]->setVisible(false);
+            }
+            else if(i < 30 || i > 33 ||  j<4 ) //creates a shaft at x values between 30 and 33
             {
                     dirtArray[i][j]->setVisible(true);
                     dirtArray[i][j]->setAlive(true);
@@ -123,7 +74,8 @@ int StudentWorld::init()
     addBarrels();
     addNuggets();
     Actor* newItem = new RegularProtester(this, 60, 60);
-    objects.push_back(newItem); 
+    objects.push_back(newItem);
+    updateExitGrid();
     return GWSTATUS_CONTINUE_GAME;
 }
 
@@ -135,9 +87,9 @@ double StudentWorld::distance(int x1, int y1, int x2, int y2) const
 
 bool StudentWorld::dirtAt(int x, int y) const
 {
-    if(x>=64 || y>=60)
+    if(x> 60 || y> 60)
         return false;
-    if(dirtArray[x][y]->isAlive() || dirtArray[x][y]->isVisible())
+    if(dirtArray[x][y]->isAlive() ) //|| dirtArray[x][y]->isVisible())
     {
         return true;
     }
@@ -156,7 +108,6 @@ bool StudentWorld::checkProtesterDistance(Actor* a, int x, int y, int increasePo
             {
                 //Check if it works properly or not, set in leaveOilFieldState
                 (*i)->annoy(annoyAmt);
-                cerr<<(*i)->getHitPoints();
                 if(annoyAmt == 0) // is a Gold Nugget and Protester needs to be set in a bribed state
                 {
                     (*i)->setLeaveOilFieldState();
@@ -170,9 +121,80 @@ bool StudentWorld::checkProtesterDistance(Actor* a, int x, int y, int increasePo
     return false;
 }
 
+//checks if there is any objects at x,y
+bool StudentWorld::isEmpty(int x, int y)
+{
+    if(x>VIEW_WIDTH -4 || y>VIEW_HEIGHT -4 || x< 0 || y< 0)
+        return false;
+    if(dirtAt(x,y) == true)
+    {
+        return false;
+    }
+    for( int i = 0; i<objects.size(); i++)
+    {
+        if(objects[i]->getX() == x && objects[i]->getY() == y)
+        {
+            if(! objects[i]->canActorsPassThroughMe())
+            {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+void StudentWorld::updateExitGrid()
+{
+    queue<Cell> m_queue;
+    Cell a(0, 60, 60);
+    m_queue.push(a);
+    while(!m_queue.empty())
+    {
+        Cell m = m_queue.front();
+        m_queue.pop();
+        exitGrid[m.x][m.y].count = m.count;
+        exitGrid[m.x][m.y].visited = true;
+        if(isEmpty(m.x-1, m.y) && exitGrid[m.x-1][m.y].visited == false)
+        {
+            Cell k(m.count+1, m.x-1, m.y);
+            m_queue.push(k);
+        }
+        if(isEmpty(m.x+1, m.y) && exitGrid[m.x+1][m.y].visited == false)
+        {
+            Cell k(m.count+1, m.x+1, m.y);
+            m_queue.push(k);
+        }
+        if(isEmpty(m.x, m.y+1) && exitGrid[m.x][m.y+1].visited == false)
+        {
+            Cell k(m.count+1, m.x, m.y+1);
+            m_queue.push(k);
+        }
+        if(isEmpty(m.x, m.y-1) && exitGrid[m.x][m.y-1].visited == false)
+        {
+            Cell k(m.count+1, m.x, m.y-1);
+            m_queue.push(k);
+        }
+    }
+}
+
 void StudentWorld::getExitDirection(int x, int y, GraphObject::Direction& d)
 {
-    
+    if(exitGrid[x-1][y].count < exitGrid[x][y].count)
+    {
+        d = GraphObject::left;
+    }
+    else if(exitGrid[x+1][y].count < exitGrid[x][y].count)
+    {
+        d = GraphObject::right;
+    }
+    else if(exitGrid[x][y-1].count< exitGrid[x][y].count)
+    {
+        d = GraphObject::down;
+    }
+    else if(exitGrid[x][y+1].count <exitGrid[x][y].count)
+    {
+        d = GraphObject::up;
+    }
 }
 
 bool StudentWorld::noDirt(int startX, int startY) const
@@ -219,7 +241,7 @@ void StudentWorld::removeDirt(int startX, int startY, int endX, int endY)
     {
         for(int j = startY; j<= endY; j++)
         {
-            if(dirtArray[i][j]->isVisible())
+            if(dirtArray[i][j]->isAlive())
             {
                 dirtArray[i][j]->setVisible(false);
                 dirtArray[i][j]->setAlive(false);
@@ -388,7 +410,7 @@ bool StudentWorld::allDirt(int x, int y) const
     {
         for(int j = y; j<= y+3; j++)
         {
-            if(!dirtArray[i][j]->isAlive() || !dirtArray[i][j] ->isVisible())
+            if(!dirtArray[i][j]->isAlive() )//|| !dirtArray[i][j] ->isVisible())
             {
                 return false;
             }

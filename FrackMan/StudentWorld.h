@@ -2,6 +2,7 @@
 #define STUDENTWORLD_H_
 
 #include <vector>
+#include <queue>
 #include "GameWorld.h"
 #include "Actor.h"
 #include "GameConstants.h"
@@ -73,6 +74,8 @@ public:
     //can the actor move to location x, y?
     bool canActorMoveTo(Actor* a, int x, int y) const;
     
+    bool isEmpty(int x, int y);
+    
     bool canActorMoveTo(Actor* a, int startX, int startY, int endX, int endY) const;
     
     void annoyFrackMan(int amt);
@@ -106,7 +109,7 @@ public:
     void removeDeadGameObjects();
     
     //update Exit Grid
-    void updateExitGrid(int x, int y);
+    void updateExitGrid();
     
     //returns if 4x4 grid is covered by dirt or not
     bool allDirt(int x, int y) const;
@@ -116,38 +119,28 @@ public:
 
     virtual ~StudentWorld();
 private:
-    struct Coord
-    {
-        int x;
-        int y;
-        int count;
-    public:
-        Coord(int a, int b, int c)
-        :x(a), y(b), count(c)
-        {
-            
-        }
-    };
     struct Cell
     {
-        int m_count = 0;
-        bool visited = false;
-    public:
-        Cell() {}
-        Cell(int count)
-        :m_count(count)
-        {
-            
-        }
+        Cell(int c, int mx, int my): x(mx), y(my), count(c) {}
+        int count;
+        int x;
+        int y;
     };
+    
+    struct countGrid
+    {
+        int count;
+        bool visited = false;
+    };
+
     int currentLevel;
     int barrels;
     int nuggets;
     int boulders;
     vector<Actor*> objects;
     FrackMan* frackManPointer;
-    Cell exitGrid[VIEW_WIDTH][VIEW_HEIGHT];
-    Dirt* dirtArray[VIEW_WIDTH][VIEW_HEIGHT-4];
+    countGrid exitGrid[VIEW_WIDTH][VIEW_HEIGHT];
+    Dirt* dirtArray[VIEW_WIDTH][VIEW_HEIGHT];
 };
 
 #endif // STUDENTWORLD_H_
