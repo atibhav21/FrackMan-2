@@ -225,6 +225,13 @@ void Boulder::doSomething()
         return;
     }
     
+    if(getStudentWorld()->checkProtesterDistance(this, x, y, 500,10) == true)
+    {
+        setAlive(false);
+        setVisible(false);
+        return;
+    }
+    
     // since its reached this point there's no dirt below the boulder
     if(stableState == true && waitingState == false)
     {
@@ -233,6 +240,14 @@ void Boulder::doSomething()
         tickCount = 30;
         return;
     }
+    
+    if(getStudentWorld()->checkProtesterDistance(this, x, y, 500 ,10) == true) //TODO: Check if 10 is correct number
+    {
+        setAlive(false);
+        setVisible(false);
+        return;
+    }
+    
     if(waitingState == true && tickCount>0)
     {
         tickCount--;
@@ -640,7 +655,6 @@ void FrackMan::doSomething()
 }
 
 
-
 //Protester Classes
 // score is the amt by which frackman's points increase if he kills protester
 Protester::Protester(StudentWorld* world, int startX, int startY, int imageID, unsigned int hitPoints, unsigned int score)
@@ -649,6 +663,19 @@ Protester::Protester(StudentWorld* world, int startX, int startY, int imageID, u
     setVisible(true);
     setAlive(true);
     m_hitPoints = hitPoints;
+    level = getStudentWorld()->getLevel();
+    ticksToWait = max(0, 3- (level/4));
+    ticksSinceLastShout = 15;
+    stepsToMove = rand()%53 + 8;
+}
+
+bool Protester::canAnnoyFrackMan() const
+{
+    if(ticksToWait >0 || leaveOilFieldState) //restingTicks > 0 || 
+    {
+        return false;
+    }
+    return true;
 }
 
 bool Protester::annoy(unsigned int amt)
@@ -676,65 +703,7 @@ bool Protester::annoy(unsigned int amt)
     return false;
 }
 
-void Protester::setLeaveOilFieldState()
-{
-    leaveOilFieldState = true;
-}
-
-void Protester::followExitPath()
-{
-    Direction d = getDirection();
-    getStudentWorld()->getExitDirection(getX(), getY(),d); //d is passed by reference so value is changed
-    setDirection(d);
-    moveInDirection();
-}
-
-bool Protester::isViableDirection(Direction d) 
-{
-    int x = getX();
-    int y = getY();
-    if( d == left)
-    {
-        if(moveToIfPossible(x-1, y) == true)
-        {
-            return true;
-        }
-    }
-    else if(d == right)
-    {
-        if(moveToIfPossible(x+1, y) == true)
-        {
-            return true;
-        }
-    }
-    else if(d == up)
-    {
-        if(moveToIfPossible(x, y+1) == true)
-        {
-            return true;
-        }
-    }
-    else if(d == down)
-    {
-        if(moveToIfPossible(x, y-1) == true)
-        {
-            return true;
-        }
-    }
-    return false;
-}
-
-RegularProtester::RegularProtester(StudentWorld* world, int startX, int startY)
-:Protester(world, startX, startY, IID_PROTESTER, 5, 20) //TODO: check if 20 is correct
-{
-    stepsToMove = rand()%53 + 8; //generates a number between 8 and 60 inclusive
-
-    level = getStudentWorld()->getLevel();
-    ticksToWait = max(0, 3- (level/4));
-    ticksSinceLastShout = 15;
-}
-
-void RegularProtester::changeDirection()
+void Protester::changeDirection()
 {
     stepsToMove = 0;
     Direction currentDirection = getDirection();
@@ -772,81 +741,41 @@ void RegularProtester::changeDirection()
     stepsToMove = rand()%53 + 8;
 }
 
-bool RegularProtester::canAnnoyFrackMan() const
+void Protester::setLeaveOilFieldState()
 {
-    if(restingTicks > 0 || ticksToWait >0)
-    {
-        return false;
-    }
-    return true;
+    leaveOilFieldState = true;
 }
 
-void RegularProtester::setStunState()
+void Protester::followExitPath()
 {
-    restingTicks = max(50, 100 - level * 10);
+    Direction d = getDirection();
+    getStudentWorld()->getExitDirection(this, getX(), getY(),d); //d is passed by reference so value is changed
+    setDirection(d);
+    moveInDirection();
 }
 
-void RegularProtester::getPerpendicularDirections(Direction& d1, Direction& d2)
+void Protester::move()
 {
-    if(getDirection() == up || getDirection() == down)
+    if(leaveOilFieldState == true)
     {
-        d1 = left;
-        d2 = right;
+        restingTicks = 0;
     }
-    else if(getDirection() == left || getDirection() == right)
-    {
-        d1 = up;
-        d2 = down;
-    }
-}
-
-bool RegularProtester::isPerpendicular(Direction d1, Direction d2) const
-{
-    if(d1 == left || d1 == right)
-    {
-        if(d2 == up || d2 == down)
-        {
-            return true;
-        }
-    }
-    else if(d1 == up || d1 == down)
-    {
-        if(d2 == left || d2 == right)
-        {
-            return true;
-        }
-    }
-    return false;
-}
-
-
-void RegularProtester::doSomething()
-{
-    
-    if(isAlive() == false)
-    {
-        return;
-    }
-    
-    
-    
     if(stepsToMove == 0)
     {
         changeDirection();
     }
     
-    //TODO: Possible bug with this set of if statements
     if(ticksToWait > 0 && restingTicks > 0)
     {
-        ticksToWait--;
+        ticksToWait --; 
         restingTicks--;
         return;
     }
-    else if(ticksToWait>0 || restingTicks > 0)
+    else if(ticksToWait >0 || restingTicks > 0)
     {
         if(ticksToWait>0)
         {
-            ticksToWait--;
+            ticksToWait -- ;
         }
         else
         {
@@ -857,10 +786,10 @@ void RegularProtester::doSomething()
     
     if(ticksToWait == 0)
     {
-        ticksToWait = max(0, 3- (level/4));
+        ticksToWait = max(0, 3- (level/4)) ;
     }
     
-    if(getMustLeaveOilField() == true)
+    if(leaveOilFieldState == true)
     {
         followExitPath();
         if(getX() == 60 && getY() == 60)
@@ -872,13 +801,13 @@ void RegularProtester::doSomething()
     }
     //TODO: Protester does not stun
     
-    if(getMustLeaveOilField() == false && getStudentWorld()->getFrackManDistance(getX(), getY())<4.0 && ticksSinceLastShout>= 15 && getStudentWorld()->facingFrackMan(this) == true)/*restingTicks<= 0*/
+    if(leaveOilFieldState == false && getStudentWorld()->getFrackManDistance(getX(), getY())<4.0 && ticksSinceLastShout >= 15 && getStudentWorld()->facingFrackMan(this) == true)/*restingTicks<= 0*/
     {
         lastPerpendicularTurn++;
         getStudentWorld()->playSound(SOUND_PROTESTER_YELL);
         /*getStudentWorld()->annoyFrackMan(getAnnoyancePoints());*/
         ticksSinceLastShout = 0;
-        restingTicks = max(50, 100- level*10);
+        restingTicks =  max(50, 100- level*10);
         return;
     }
     else
@@ -887,8 +816,8 @@ void RegularProtester::doSomething()
         
     }
     /*setDirection(left);
-    stepsToMove = 50;
-    moveInDirection();*/
+     stepsToMove = 50;
+     moveInDirection();*/
     
     
     if(getStudentWorld()->checkLineOfSight(this))
@@ -947,7 +876,7 @@ void RegularProtester::doSomething()
         }
         
         setDirection(newDirection);
-        stepsToMove = rand()%53 + 8;
+        stepsToMove = rand()%53 + 8 ;
         lastPerpendicularTurn = 0;
     }
     else
@@ -956,6 +885,101 @@ void RegularProtester::doSomething()
     }
     
     moveInDirection();
+}
+
+bool Protester::isViableDirection(Direction d) 
+{
+    int x = getX();
+    int y = getY();
+    if( d == left)
+    {
+        if(moveToIfPossible(x-1, y) == true)
+        {
+            return true;
+        }
+    }
+    else if(d == right)
+    {
+        if(moveToIfPossible(x+1, y) == true)
+        {
+            return true;
+        }
+    }
+    else if(d == up)
+    {
+        if(moveToIfPossible(x, y+1) == true)
+        {
+            return true;
+        }
+    }
+    else if(d == down)
+    {
+        if(moveToIfPossible(x, y-1) == true)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+void Protester::setStunState()
+{
+    restingTicks = max(50, 100 - level * 10);
+}
+
+void Protester::getPerpendicularDirections(Direction& d1, Direction& d2)
+{
+    if(getDirection() == up || getDirection() == down)
+    {
+        d1 = left;
+        d2 = right;
+    }
+    else if(getDirection() == left || getDirection() == right)
+    {
+        d1 = up;
+        d2 = down;
+    }
+}
+
+bool Protester::isPerpendicular(Direction d1, Direction d2) const
+{
+    if(d1 == left || d1 == right)
+    {
+        if(d2 == up || d2 == down)
+        {
+            return true;
+        }
+    }
+    else if(d1 == up || d1 == down)
+    {
+        if(d2 == left || d2 == right)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+RegularProtester::RegularProtester(StudentWorld* world, int startX, int startY)
+:Protester(world, startX, startY, IID_PROTESTER, 5, 20) //TODO: check if 20 is correct
+{
+     //generates a number between 8 and 60 inclusive
+    
+}
+
+
+
+void RegularProtester::doSomething()
+{
+    
+    if(isAlive() == false)
+    {
+        return;
+    }
+    move();
+    
+    
+    
     
     
 
@@ -964,5 +988,13 @@ void RegularProtester::doSomething()
      
      */
     
+    
+}
+
+//StudentWorld* world, int startX, int startY, int imageID, unsigned int hitPoints, unsigned int score
+
+HardCoreProtester::HardCoreProtester(StudentWorld* sw, int x, int y)
+:Protester(sw, x, y, IID_HARD_CORE_PROTESTER, 20, 1) //TODO: CHECK WHAT SCORE IS YOU DUMB PROGRAMMER
+{
     
 }

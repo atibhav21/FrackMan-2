@@ -82,7 +82,7 @@ public:
     
     double getFrackManDistance(int x, int y) const;
     
-    void getExitDirection(int x, int y, GraphObject::Direction& d);
+    void getExitDirection(Actor* a, int x, int y, GraphObject::Direction& d);
     
     //add barrels to the oil field
     void addBarrels();

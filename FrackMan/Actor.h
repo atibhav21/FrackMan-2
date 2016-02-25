@@ -77,12 +77,11 @@ public:
     virtual bool annoy(unsigned int amount);
     virtual void addGold() {m_gold++;}
     virtual bool huntsFrackMan() const {return true; }
-    virtual bool canAnnoyFrackMan() const {return true; }
-    virtual int getAnnoyancePoints() const {return 0;}
-    
-    virtual void setStunState() {};
+    virtual bool canAnnoyFrackMan() const;
     
     virtual bool isViableDirection(Direction d) ;
+    
+    virtual void changeDirection();
     
     // Set state to having given up protest
     virtual void setLeaveOilFieldState() ;
@@ -90,7 +89,49 @@ public:
     void followExitPath();
     
     //check if protester is in leave oil field state
-    bool getMustLeaveOilField() {return leaveOilFieldState; }
+    bool getMustLeaveOilField() const {return leaveOilFieldState; }
+    
+    virtual int getAnnoyancePoints() const {return 2;}
+    
+    bool isPerpendicular(Direction d1, Direction d2) const;
+    
+    void getPerpendicularDirections(Direction& d1, Direction& d2);
+    
+    virtual void setStunState();
+    
+    void move();
+    
+    /*int getTicksToWait() const {return ticksToWait; }
+    
+    void setTicksToWait(int amt) {ticksToWait = amt; }
+    
+    void decTicksToWait() { ticksToWait --; }
+    
+    int getTickSinceLastShout() const {return ticksSinceLastShout; }
+    
+    void setTicksSinceLastShout(int amt) { ticksSinceLastShout = amt; }
+    
+    void incTicksSinceLastShout() {ticksSinceLastShout++; }
+    
+    int getRestingTicks() { return restingTicks; }
+    
+    void decRestingTicks() {restingTicks -- ;}
+    
+    void setRestingTicks(int amt) {restingTicks = amt; }
+    
+    int getLastPerpendicularTurn() { return lastPerpendicularTurn; }
+    
+    void incLastPerpendicluarTurn() {lastPerpendicularTurn++ ;}
+    
+    void setLastPerpendicularTurn(int amt) {lastPerpendicularTurn = amt; }
+    
+    int getStepsToMove() {return stepsToMove; }
+    
+    void setStepsToMove(int amt) {stepsToMove = amt; }
+    
+    void decStepsToMove() {stepsToMove -- ;}
+    
+    int getLevel() { return level; }*/
     
     // Set number of ticks until next move
     void setTicksToNextMove();
@@ -98,6 +139,14 @@ private:
     int m_gold;
     bool leaveOilFieldState;
     int m_hitPoints;
+    
+    //changes made
+    int ticksToWait;
+    int ticksSinceLastShout;
+    int restingTicks;
+    int lastPerpendicularTurn;
+    int stepsToMove;
+    int level;
 };
 
 class RegularProtester : public Protester
@@ -105,20 +154,23 @@ class RegularProtester : public Protester
 public:
     RegularProtester(StudentWorld* world, int startX, int startY);
     virtual void doSomething();
-    virtual void changeDirection();
-    virtual int getAnnoyancePoints() const {return 2;}
-    virtual bool canAnnoyFrackMan() const;
-    virtual void setStunState();
-    bool isPerpendicular(Direction d1, Direction d2) const;
-    void getPerpendicularDirections(Direction& d1, Direction& d2);
-private:
-    int stepsToMove;
     
-    int ticksToWait;
-    int level;
-    int ticksSinceLastShout;
-    int restingTicks;
-    int lastPerpendicularTurn;
+    
+    //virtual bool canAnnoyFrackMan() const;
+    
+    
+private:
+    
+    
+    
+    
+};
+
+class HardCoreProtester: public Protester
+{
+public:
+    HardCoreProtester(StudentWorld* sw, int startX, int startY);
+    virtual void doSomething();
 };
 
 class FrackMan: public Agent

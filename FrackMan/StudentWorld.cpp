@@ -16,15 +16,14 @@ StudentWorld::StudentWorld(string assetDir)
 :GameWorld(assetDir)
 {
     currentLevel = getLevel();
-    //updateExitGrid(0, 60);
-    /*for(int i = 0; i<16; i++)
+    
+    for(int i = 0; i<64; i++)
     {
-        for(int j = 0; j<16; j++)
+        for(int j = 0; j<64; j++)
         {
-            cerr<<exitGrid[i][j].m_count;
+            exitGrid[i][j].count = 1000; //since count of any point on grid cannot be greater than 1000;
         }
-        cerr<<endl;
-    }*/
+    }
 }
 
 
@@ -104,7 +103,7 @@ bool StudentWorld::checkProtesterDistance(Actor* a, int x, int y, int increasePo
         //i should be able to pick things up
         if((*i)->canPickThingsUp() == true)
         {
-            if(distance((*i)->getX(), (*i)->getY(), x, y) <= 3.0)
+            if(distance((*i)->getX(), (*i)->getY(), x, y) <= 4.0)
             {
                 //Check if it works properly or not, set in leaveOilFieldState
                 (*i)->annoy(annoyAmt);
@@ -177,21 +176,21 @@ void StudentWorld::updateExitGrid()
     }
 }
 
-void StudentWorld::getExitDirection(int x, int y, GraphObject::Direction& d)
+void StudentWorld::getExitDirection(Actor*a, int x, int y, GraphObject::Direction& d)
 {
-    if(exitGrid[x-1][y].count < exitGrid[x][y].count)
+    if(exitGrid[x-1][y].count < exitGrid[x][y].count && canActorMoveTo(a, x-1, y))
     {
         d = GraphObject::left;
     }
-    else if(exitGrid[x+1][y].count < exitGrid[x][y].count)
+    else if(exitGrid[x+1][y].count < exitGrid[x][y].count && canActorMoveTo(a, x+1, y))
     {
         d = GraphObject::right;
     }
-    else if(exitGrid[x][y-1].count< exitGrid[x][y].count)
+    else if(exitGrid[x][y-1].count< exitGrid[x][y].count && canActorMoveTo(a, x, y-1))
     {
         d = GraphObject::down;
     }
-    else if(exitGrid[x][y+1].count <exitGrid[x][y].count)
+    else if(exitGrid[x][y+1].count <exitGrid[x][y].count && canActorMoveTo(a, x, y+1))
     {
         d = GraphObject::up;
     }
@@ -249,10 +248,13 @@ void StudentWorld::removeDirt(int startX, int startY, int endX, int endY)
             }
         }
     }
-    if(soundToBePlayed == true)
+    if(soundToBePlayed == true) //dirt has been removed
     {
+        updateExitGrid();
         playSound(SOUND_DIG);
     }
+    
+    
 }
 
 void StudentWorld::addNewItem()
@@ -500,20 +502,20 @@ void StudentWorld::squirtUsed(GraphObject::Direction d)
     Actor* newSquirt;
     if(d == GraphObject::left)
     {
-        newSquirt = new Squirt(frackManPointer->getX(), frackManPointer->getY(),this, d);
+        newSquirt = new Squirt(frackManPointer->getX() -1 , frackManPointer->getY(),this, d);
         
     }
     else if(d == GraphObject::right)
     {
-        newSquirt = new Squirt(frackManPointer->getX()+2, frackManPointer->getY(), this, d);
+        newSquirt = new Squirt(frackManPointer->getX()+4, frackManPointer->getY(), this, d);
     }
     else if(d == GraphObject::up)
     {
-        newSquirt = new Squirt(frackManPointer->getX()+2, frackManPointer->getY(), this, d);
+        newSquirt = new Squirt(frackManPointer->getX(), frackManPointer->getY()+4, this, d);
     }
     else
     {
-        newSquirt = new Squirt(frackManPointer->getX(), frackManPointer->getY(), this, d);
+        newSquirt = new Squirt(frackManPointer->getX(), frackManPointer->getY()-1, this, d);
     }
     objects.push_back(newSquirt);
 }
@@ -701,7 +703,7 @@ int StudentWorld::move()
     }
     addNewItem();
     
-    
+    //TODO: Check for when to add protesters
     
     removeDeadGameObjects();
     
