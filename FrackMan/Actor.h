@@ -101,37 +101,7 @@ public:
     
     void move();
     
-    /*int getTicksToWait() const {return ticksToWait; }
-    
-    void setTicksToWait(int amt) {ticksToWait = amt; }
-    
-    void decTicksToWait() { ticksToWait --; }
-    
-    int getTickSinceLastShout() const {return ticksSinceLastShout; }
-    
-    void setTicksSinceLastShout(int amt) { ticksSinceLastShout = amt; }
-    
-    void incTicksSinceLastShout() {ticksSinceLastShout++; }
-    
-    int getRestingTicks() { return restingTicks; }
-    
-    void decRestingTicks() {restingTicks -- ;}
-    
-    void setRestingTicks(int amt) {restingTicks = amt; }
-    
-    int getLastPerpendicularTurn() { return lastPerpendicularTurn; }
-    
-    void incLastPerpendicluarTurn() {lastPerpendicularTurn++ ;}
-    
-    void setLastPerpendicularTurn(int amt) {lastPerpendicularTurn = amt; }
-    
-    int getStepsToMove() {return stepsToMove; }
-    
-    void setStepsToMove(int amt) {stepsToMove = amt; }
-    
-    void decStepsToMove() {stepsToMove -- ;}
-    
-    int getLevel() { return level; }*/
+    virtual bool trackFrackMan() = 0;
     
     // Set number of ticks until next move
     void setTicksToNextMove();
@@ -154,7 +124,7 @@ class RegularProtester : public Protester
 public:
     RegularProtester(StudentWorld* world, int startX, int startY);
     virtual void doSomething();
-    
+    virtual bool trackFrackMan() ;
     
     //virtual bool canAnnoyFrackMan() const;
     
@@ -171,6 +141,7 @@ class HardCoreProtester: public Protester
 public:
     HardCoreProtester(StudentWorld* sw, int startX, int startY);
     virtual void doSomething();
+    virtual bool trackFrackMan();
 };
 
 class FrackMan: public Agent

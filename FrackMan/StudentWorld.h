@@ -56,6 +56,9 @@ public:
     //add a new Item to the grid
     void addNewItem();
     
+    //checks if a new Protester needs to be added
+    void addProtester();
+    
     //check the distance of protesters from the gold nugget
     bool checkProtesterDistance(Actor* a, int x, int y, int increasePoints, int annoyAmt);
     
@@ -108,6 +111,12 @@ public:
     //remove all the dead objects after a single tick
     void removeDeadGameObjects();
     
+    //reset the exit grid to its initial state
+    void resetExitGrid();
+    
+    //update the grid only for location x, y
+    void updateSelectiveGrid(int x, int y);
+    
     //update Exit Grid
     void updateExitGrid();
     
@@ -133,6 +142,8 @@ private:
         bool visited = false;
     };
 
+    int ticksSinceLastProtester;
+    int protestersOnField;
     int currentLevel;
     int barrels;
     int nuggets;

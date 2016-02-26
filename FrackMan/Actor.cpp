@@ -655,6 +655,8 @@ void FrackMan::doSomething()
 }
 
 
+int lastPerpendicularTurn;
+
 //Protester Classes
 // score is the amt by which frackman's points increase if he kills protester
 Protester::Protester(StudentWorld* world, int startX, int startY, int imageID, unsigned int hitPoints, unsigned int score)
@@ -667,11 +669,14 @@ Protester::Protester(StudentWorld* world, int startX, int startY, int imageID, u
     ticksToWait = max(0, 3- (level/4));
     ticksSinceLastShout = 15;
     stepsToMove = rand()%53 + 8;
+    restingTicks = 0;
+    lastPerpendicularTurn = 0;
+    leaveOilFieldState = false;
 }
 
 bool Protester::canAnnoyFrackMan() const
 {
-    if(ticksToWait >0 || leaveOilFieldState) //restingTicks > 0 || 
+    if(ticksToWait >0 || leaveOilFieldState )//|| restingTicks > 0)
     {
         return false;
     }
@@ -681,11 +686,7 @@ bool Protester::canAnnoyFrackMan() const
 bool Protester::annoy(unsigned int amt)
 {
     //TODO: Check if Protester is annoyed by Boulder or by Squirt
-    if(m_hitPoints<= 0 && leaveOilFieldState == false)
-    {
-        setLeaveOilFieldState();
-        return true;
-    }
+    
     
     m_hitPoints-= amt;
     if(m_hitPoints<=0)
@@ -749,8 +750,9 @@ void Protester::setLeaveOilFieldState()
 void Protester::followExitPath()
 {
     Direction d = getDirection();
-    getStudentWorld()->getExitDirection(this, getX(), getY(),d); //d is passed by reference so value is changed
+    getStudentWorld()->getExitDirection(this, getX(), getY(),d);
     setDirection(d);
+    //d is passed by reference so value is changed
     moveInDirection();
 }
 
@@ -760,6 +762,13 @@ void Protester::move()
     {
         restingTicks = 0;
     }
+    
+    if(m_hitPoints<= 0 && leaveOilFieldState == false)
+    {
+        setLeaveOilFieldState();
+        return;
+    }
+    
     if(stepsToMove == 0)
     {
         changeDirection();
@@ -815,9 +824,11 @@ void Protester::move()
         ticksSinceLastShout++;
         
     }
-    /*setDirection(left);
-     stepsToMove = 50;
-     moveInDirection();*/
+    
+    if(trackFrackMan() == true)
+    {
+        return;
+    }
     
     
     if(getStudentWorld()->checkLineOfSight(this))
@@ -924,7 +935,7 @@ bool Protester::isViableDirection(Direction d)
 
 void Protester::setStunState()
 {
-    restingTicks = max(50, 100 - level * 10);
+    restingTicks += max(50, 100 - level * 10);
 }
 
 void Protester::getPerpendicularDirections(Direction& d1, Direction& d2)
@@ -964,10 +975,14 @@ RegularProtester::RegularProtester(StudentWorld* world, int startX, int startY)
 :Protester(world, startX, startY, IID_PROTESTER, 5, 20) //TODO: check if 20 is correct
 {
      //generates a number between 8 and 60 inclusive
-    
+    setVisible(true);
+    setAlive(true);
 }
 
-
+bool RegularProtester::trackFrackMan()
+{
+    return false;
+}
 
 void RegularProtester::doSomething()
 {
@@ -977,11 +992,6 @@ void RegularProtester::doSomething()
         return;
     }
     move();
-    
-    
-    
-    
-    
 
     /*
         implementation of squirt: if the object cannot pass through another object, then the first object annoys the second object. In case of boulders, nothing happens but in case of protestors their annoy function is called which would decrease their hit points
@@ -996,5 +1006,22 @@ void RegularProtester::doSomething()
 HardCoreProtester::HardCoreProtester(StudentWorld* sw, int x, int y)
 :Protester(sw, x, y, IID_HARD_CORE_PROTESTER, 20, 1) //TODO: CHECK WHAT SCORE IS YOU DUMB PROGRAMMER
 {
+    setVisible(true);
+    setAlive(true);
+}
+
+bool HardCoreProtester::trackFrackMan()
+{
+    return true; //TODO: Change according to spec
+}
+
+void HardCoreProtester::doSomething()
+{
+    if(!isAlive())
+    {
+        return;
+    }
+    
+    move();
     
 }

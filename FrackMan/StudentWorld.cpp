@@ -24,6 +24,8 @@ StudentWorld::StudentWorld(string assetDir)
             exitGrid[i][j].count = 1000; //since count of any point on grid cannot be greater than 1000;
         }
     }
+    
+    ticksSinceLastProtester = 0;
 }
 
 
@@ -40,6 +42,8 @@ StudentWorld::StudentWorld(string assetDir)
 int StudentWorld::init()
 {
     currentLevel = getLevel();
+    ticksSinceLastProtester = 0;
+    protestersOnField = 0;
     frackManPointer = new FrackMan(30,60, this);
     for(int i = 0; i<VIEW_WIDTH; i++) //x direction
     {
@@ -72,9 +76,10 @@ int StudentWorld::init()
     addBoulders();
     addBarrels();
     addNuggets();
-    Actor* newItem = new RegularProtester(this, 60, 60);
-    objects.push_back(newItem);
+    /*Actor* newItem = new RegularProtester(this, 60, 60);
+    objects.push_back(newItem);*/
     updateExitGrid();
+    
     return GWSTATUS_CONTINUE_GAME;
 }
 
@@ -142,8 +147,49 @@ bool StudentWorld::isEmpty(int x, int y)
     return true;
 }
 
+void StudentWorld::updateSelectiveGrid(int x, int y)
+{
+    if(exitGrid[x-1 ][y].count!= 1000) //left is empty
+    {
+        exitGrid[x][y].visited = true;
+        if(exitGrid[x][y].count > exitGrid[x-1][y].count + 1)
+            exitGrid[x][y].count = exitGrid[x-1][y].count + 1;
+    }
+    if(exitGrid[x+1 ][y].count!= 1000) //left is empty
+    {
+        exitGrid[x][y].visited = true;
+        if(exitGrid[x][y].count > exitGrid[x+1][y].count + 1)
+            exitGrid[x][y].count = exitGrid[x+1][y].count + 1;
+    }
+    if(exitGrid[x ][y-1].count!= 1000) //left is empty
+    {
+        exitGrid[x][y].visited = true;
+        if(exitGrid[x][y].count > exitGrid[x][y-1].count + 1)
+            exitGrid[x][y].count = exitGrid[x][y-1].count + 1;
+    }
+    if(exitGrid[x][y+1].count!= 1000) //left is empty
+    {
+        exitGrid[x][y].visited = true;
+        if(exitGrid[x][y].count > exitGrid[x][y+1].count + 1)
+            exitGrid[x][y].count = exitGrid[x][y+1].count + 1;
+    }
+}
+
+void StudentWorld::resetExitGrid()
+{
+    for(int i = 0; i< 64; i++)
+    {
+        for(int j = 0; j< 64; j++)
+        {
+            exitGrid[i][j].visited = false;
+            exitGrid[i][j].count = 1000;
+        }
+    }
+}
+
 void StudentWorld::updateExitGrid()
 {
+    //resetExitGrid();
     queue<Cell> m_queue;
     Cell a(0, 60, 60);
     m_queue.push(a);
@@ -178,22 +224,44 @@ void StudentWorld::updateExitGrid()
 
 void StudentWorld::getExitDirection(Actor*a, int x, int y, GraphObject::Direction& d)
 {
+
     if(exitGrid[x-1][y].count < exitGrid[x][y].count && canActorMoveTo(a, x-1, y))
     {
         d = GraphObject::left;
+
     }
     else if(exitGrid[x+1][y].count < exitGrid[x][y].count && canActorMoveTo(a, x+1, y))
     {
         d = GraphObject::right;
+
     }
     else if(exitGrid[x][y-1].count< exitGrid[x][y].count && canActorMoveTo(a, x, y-1))
     {
         d = GraphObject::down;
+
     }
-    else if(exitGrid[x][y+1].count <exitGrid[x][y].count && canActorMoveTo(a, x, y+1))
+    else if(exitGrid[x][y+1].count < exitGrid[x][y].count && canActorMoveTo(a, x, y+1))
+    {
+        d = GraphObject::up;
+
+    }
+    
+    //none of these options are viable so pick a random direction
+    //check if x is close to shaft. if it is then find that direction and move in that direction
+    if(y > 60)
     {
         d = GraphObject::up;
     }
+    if(x > 33 && x <36)
+    {
+        d = GraphObject::left;
+    }
+    else if(x < 30 && x > 27)
+    {
+        d = GraphObject::right;
+    }
+
+    
 }
 
 bool StudentWorld::noDirt(int startX, int startY) const
@@ -245,13 +313,24 @@ void StudentWorld::removeDirt(int startX, int startY, int endX, int endY)
                 dirtArray[i][j]->setVisible(false);
                 dirtArray[i][j]->setAlive(false);
                 soundToBePlayed = true;
+                updateSelectiveGrid(i, j);
             }
         }
     }
     if(soundToBePlayed == true) //dirt has been removed
     {
-        updateExitGrid();
         playSound(SOUND_DIG);
+        /*cerr<<"#########################"<<endl;
+        for(int i = 0; i<64; i++)
+        {
+            for(int j = 0; j<64; j++)
+            {
+                cerr<<exitGrid[i][j].count <<" ";
+            }
+            cerr<<endl;
+        }
+        cerr<<"####################" <<endl;*/
+        
     }
     
     
@@ -286,6 +365,34 @@ void StudentWorld::addNewItem()
     }
 }
 
+void StudentWorld::addProtester()
+{
+    if(ticksSinceLastProtester > 0)
+    {
+        ticksSinceLastProtester--;
+        return;
+    }
+    int P = min(15, 2 + (int)(currentLevel * 1.5));
+    if(protestersOnField < P)
+    {
+        int probabilityOfHardcore = min(90, currentLevel * 10 + 30);
+        if(rand() % probabilityOfHardcore == 20)
+        {
+            //add a hardcore protester
+            Actor* newProtester = new HardCoreProtester(this, 60,60);
+            objects.push_back(newProtester);
+        }
+        else
+        {
+            //add a regular protester
+            Actor* newProtester = new RegularProtester(this, 60, 60);
+            objects.push_back(newProtester);
+        }
+        ticksSinceLastProtester = max(25, 200 - currentLevel);
+    }
+    
+}
+
 void formatField(int start, int end, int value, string& result)
 {
     for(int i = start; start>= end; i--)
@@ -316,7 +423,7 @@ string StudentWorld::formatText(int score, int level, int lives, int health, int
     livesText[7] = (char)(lives+'0');
     
     //TODO: Health field
-    string healthText = "Hlth: 000%";
+    string healthText = "Hlth:  00%";
     if(health!= 0)
         formatField(8, 6, health*10, healthText);
     
@@ -530,6 +637,8 @@ void StudentWorld::dropNugget()
 bool StudentWorld::canActorMoveTo(Actor* a, int startX, int startY, int endX, int endY) const
 {
 
+    //only for protester to track down frackman
+    
     if(abs(startX - endX)<4.0) //means you have to move in vertical direction
     {
         if(startY>endY)
@@ -656,14 +765,15 @@ bool StudentWorld::canActorMoveTo(Actor* a, int x, int y) const
     }
     for(int i = 0; i<objects.size(); i++)
     {
-        if(objects[i]->canAnnoyFrackMan() == true && distance(objects[i]->getX(), objects[i]->getY() , frackManPointer->getX(), frackManPointer->getY())<4.0)
-        {
-            frackManPointer->annoy(objects[i]->getAnnoyancePoints());
-        }
         if(objects[i] == a)
         {
             continue;
         }
+        if(objects[i]->canAnnoyFrackMan() == true && distance(objects[i]->getX(), objects[i]->getY() , frackManPointer->getX(), frackManPointer->getY())<4.0)
+        {
+            frackManPointer->annoy(objects[i]->getAnnoyancePoints());
+        }
+        
         if( distance(x,y,objects[i]->getX(), objects[i]->getY())<4.0)
         {
             if(objects[i]->canActorsPassThroughMe() == false)
@@ -704,6 +814,7 @@ int StudentWorld::move()
     addNewItem();
     
     //TODO: Check for when to add protesters
+    addProtester();
     
     removeDeadGameObjects();
     
