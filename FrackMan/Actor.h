@@ -21,6 +21,8 @@ public:
     
     virtual bool annoy(unsigned int amount) {return false;}
     
+    virtual void addGold() {}
+    
     StudentWorld* getStudentWorld() const;
     
     // Can other actors pass through this actor?
@@ -38,6 +40,8 @@ public:
     virtual void setLeaveOilFieldState()  {};
     
     virtual int getAnnoyancePoints() const {return 0;}
+    
+    virtual void getPrevCoOrdinates(int x, int y) {};
     
     // checks if object can move to x, y
     bool moveToIfPossible(int x, int y) ;
@@ -75,9 +79,11 @@ public:
     virtual void doSomething() {}
     
     virtual bool annoy(unsigned int amount);
-    virtual void addGold() {m_gold++;}
+    virtual void addGold();
     virtual bool huntsFrackMan() const {return true; }
     virtual bool canAnnoyFrackMan() const;
+    
+    virtual int getGold() { return m_gold; }
     
     virtual bool isViableDirection(Direction d) ;
     
@@ -109,6 +115,7 @@ private:
     int m_gold;
     bool leaveOilFieldState;
     int m_hitPoints;
+    bool stunState;
     
     //changes made
     int ticksToWait;

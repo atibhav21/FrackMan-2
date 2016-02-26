@@ -330,7 +330,7 @@ int Goodie::activate(bool permanent, int SoundID, int pointsIncrease)
     }
     else if(permanent == false && getStudentWorld()->checkProtesterDistance(this, getX(), getY(), pointsIncrease, 0) == true)
     {
-        getStudentWorld()->playSound(SOUND_PROTESTER_FOUND_GOLD);
+        //getStudentWorld()->playSound(SOUND_PROTESTER_FOUND_GOLD);
         setAlive(false);
         setVisible(false);
         return 1;
@@ -665,6 +665,7 @@ Protester::Protester(StudentWorld* world, int startX, int startY, int imageID, u
     setVisible(true);
     setAlive(true);
     m_hitPoints = hitPoints;
+    m_gold = 0;
     level = getStudentWorld()->getLevel();
     ticksToWait = max(0, 3- (level/4));
     ticksSinceLastShout = 15;
@@ -672,11 +673,12 @@ Protester::Protester(StudentWorld* world, int startX, int startY, int imageID, u
     restingTicks = 0;
     lastPerpendicularTurn = 0;
     leaveOilFieldState = false;
+    stunState = false;
 }
 
 bool Protester::canAnnoyFrackMan() const
 {
-    if(ticksToWait >0 || leaveOilFieldState )//|| restingTicks > 0)
+    if(ticksToWait >0 || leaveOilFieldState || stunState == true)//|| restingTicks > 0)
     {
         return false;
     }
@@ -686,7 +688,10 @@ bool Protester::canAnnoyFrackMan() const
 bool Protester::annoy(unsigned int amt)
 {
     //TODO: Check if Protester is annoyed by Boulder or by Squirt
-    
+    if(amt == 0)
+    {
+        return false;
+    }
     
     m_hitPoints-= amt;
     if(m_hitPoints<=0)
@@ -747,10 +752,16 @@ void Protester::setLeaveOilFieldState()
     leaveOilFieldState = true;
 }
 
+void Protester::addGold()
+{
+    m_gold++;
+    getStudentWorld()->playSound(SOUND_PROTESTER_FOUND_GOLD);
+}
+
 void Protester::followExitPath()
 {
     Direction d = getDirection();
-    getStudentWorld()->getExitDirection(this, getX(), getY(),d);
+    getStudentWorld()->getExitDirection(this, getX(), getY(), d);
     setDirection(d);
     //d is passed by reference so value is changed
     moveInDirection();
@@ -798,6 +809,11 @@ void Protester::move()
         ticksToWait = max(0, 3- (level/4)) ;
     }
     
+    if(restingTicks == 0)
+    {
+        stunState = false;
+    }
+    
     if(leaveOilFieldState == true)
     {
         followExitPath();
@@ -810,12 +826,13 @@ void Protester::move()
     }
     //TODO: Protester does not stun
     
-    if(leaveOilFieldState == false && getStudentWorld()->getFrackManDistance(getX(), getY())<4.0 && ticksSinceLastShout >= 15 && getStudentWorld()->facingFrackMan(this) == true)/*restingTicks<= 0*/
+    if(leaveOilFieldState == false && getStudentWorld()->getFrackManDistance(getX(), getY())<4.0 && ticksSinceLastShout >= 15 && getStudentWorld()->facingFrackMan(this) == true && stunState == false)/*restingTicks<= 0*/
     {
         lastPerpendicularTurn++;
         getStudentWorld()->playSound(SOUND_PROTESTER_YELL);
         /*getStudentWorld()->annoyFrackMan(getAnnoyancePoints());*/
         ticksSinceLastShout = 0;
+        setStunState();
         restingTicks =  max(50, 100- level*10);
         return;
     }
@@ -898,6 +915,8 @@ void Protester::move()
     moveInDirection();
 }
 
+//TODO: Keep track of where the last co-ordinate was and if stuck then move in a direction in which it was possible
+
 bool Protester::isViableDirection(Direction d) 
 {
     int x = getX();
@@ -936,6 +955,7 @@ bool Protester::isViableDirection(Direction d)
 void Protester::setStunState()
 {
     restingTicks += max(50, 100 - level * 10);
+    stunState = true;
 }
 
 void Protester::getPerpendicularDirections(Direction& d1, Direction& d2)
@@ -951,6 +971,9 @@ void Protester::getPerpendicularDirections(Direction& d1, Direction& d2)
         d2 = down;
     }
 }
+
+
+
 
 bool Protester::isPerpendicular(Direction d1, Direction d2) const
 {
@@ -984,12 +1007,17 @@ bool RegularProtester::trackFrackMan()
     return false;
 }
 
+
 void RegularProtester::doSomething()
 {
     
     if(isAlive() == false)
     {
         return;
+    }
+    if(getGold() > 0)
+    {
+        setLeaveOilFieldState();
     }
     move();
 
@@ -1004,7 +1032,7 @@ void RegularProtester::doSomething()
 //StudentWorld* world, int startX, int startY, int imageID, unsigned int hitPoints, unsigned int score
 
 HardCoreProtester::HardCoreProtester(StudentWorld* sw, int x, int y)
-:Protester(sw, x, y, IID_HARD_CORE_PROTESTER, 20, 1) //TODO: CHECK WHAT SCORE IS YOU DUMB PROGRAMMER
+:Protester(sw, x, y, IID_HARD_CORE_PROTESTER, 20, 1) 
 {
     setVisible(true);
     setAlive(true);
@@ -1012,7 +1040,8 @@ HardCoreProtester::HardCoreProtester(StudentWorld* sw, int x, int y)
 
 bool HardCoreProtester::trackFrackMan()
 {
-    return true; //TODO: Change according to spec
+    return false;
+    //return true; //TODO: Change according to spec
 }
 
 void HardCoreProtester::doSomething()

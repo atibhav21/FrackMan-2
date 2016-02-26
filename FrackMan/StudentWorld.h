@@ -39,6 +39,9 @@ public:
     
     virtual void cleanUp();
     
+    //returns direction opposite to dir
+    GraphObject::Direction getPreviousdirection(GraphObject::Direction dir);
+    
     //remove dirt from these coordinates
     void removeDirt(int startX, int startY, int endX, int endY);
     

@@ -21,7 +21,7 @@ StudentWorld::StudentWorld(string assetDir)
     {
         for(int j = 0; j<64; j++)
         {
-            exitGrid[i][j].count = 1000; //since count of any point on grid cannot be greater than 1000;
+            exitGrid[i][j].count = 99; //since count of any point on grid cannot be greater than 1000;
         }
     }
     
@@ -76,7 +76,7 @@ int StudentWorld::init()
     addBoulders();
     addBarrels();
     addNuggets();
-    /*Actor* newItem = new RegularProtester(this, 60, 60);
+    /*Actor* newItem = new HardCoreProtester(this, 60, 60);
     objects.push_back(newItem);*/
     updateExitGrid();
     
@@ -114,7 +114,7 @@ bool StudentWorld::checkProtesterDistance(Actor* a, int x, int y, int increasePo
                 (*i)->annoy(annoyAmt);
                 if(annoyAmt == 0) // is a Gold Nugget and Protester needs to be set in a bribed state
                 {
-                    (*i)->setLeaveOilFieldState();
+                    (*i)->addGold();
                 }
                 increaseScore(increasePoints);
                 return true;
@@ -222,18 +222,38 @@ void StudentWorld::updateExitGrid()
     }
 }
 
+GraphObject::Direction StudentWorld::getPreviousdirection(GraphObject::Direction dir)
+{
+    if( dir == GraphObject::left)
+    {
+        return GraphObject::right;
+    }
+    if(dir == GraphObject::right)
+    {
+        return GraphObject::left;
+    }
+    if(dir == GraphObject::up)
+    {
+        return GraphObject::down;
+    }
+    if(dir == GraphObject::down)
+    {
+        return GraphObject::up;
+    }
+    return GraphObject::right; //code should never reach this point
+}
+
 void StudentWorld::getExitDirection(Actor*a, int x, int y, GraphObject::Direction& d)
 {
-
+    //GraphObject::Direction prevDir = getPreviousdirection(d); //this is the previous direction of object
+    //GraphObject::Direction currentDirection = d;
     if(exitGrid[x-1][y].count < exitGrid[x][y].count && canActorMoveTo(a, x-1, y))
     {
-        d = GraphObject::left;
-
+            d = GraphObject::left;
     }
     else if(exitGrid[x+1][y].count < exitGrid[x][y].count && canActorMoveTo(a, x+1, y))
     {
         d = GraphObject::right;
-
     }
     else if(exitGrid[x][y-1].count< exitGrid[x][y].count && canActorMoveTo(a, x, y-1))
     {
@@ -243,12 +263,36 @@ void StudentWorld::getExitDirection(Actor*a, int x, int y, GraphObject::Directio
     else if(exitGrid[x][y+1].count < exitGrid[x][y].count && canActorMoveTo(a, x, y+1))
     {
         d = GraphObject::up;
-
     }
+    else
+    {
+        //d = currentDirection;
+        /*while(d == prevDir)
+        {
+            int x = rand()% 4;
+            if( x == 0)
+            {
+                d = GraphObject::left;
+            }
+            else if( x == 1)
+            {
+                d = GraphObject::right;
+            }
+            else if (x == 2)
+            {
+                d = GraphObject::up;
+            }
+            else
+            {
+                d = GraphObject::down;
+            }
+        }*/
+    }
+    
     
     //none of these options are viable so pick a random direction
     //check if x is close to shaft. if it is then find that direction and move in that direction
-    if(y > 60)
+    /*if(y > 60)
     {
         d = GraphObject::up;
     }
@@ -259,7 +303,7 @@ void StudentWorld::getExitDirection(Actor*a, int x, int y, GraphObject::Directio
     else if(x < 30 && x > 27)
     {
         d = GraphObject::right;
-    }
+    }*/
 
     
 }
