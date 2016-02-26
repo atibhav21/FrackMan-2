@@ -21,7 +21,7 @@ StudentWorld::StudentWorld(string assetDir)
     {
         for(int j = 0; j<64; j++)
         {
-            exitGrid[i][j].count = 99; //since count of any point on grid cannot be greater than 1000;
+            exitGrid[i][j].count = 1000; //since count of any point on grid cannot be greater than 1000;
         }
     }
     
@@ -857,7 +857,7 @@ int StudentWorld::move()
     }
     addNewItem();
     
-    //TODO: Check for when to add protesters
+    
     addProtester();
     
     removeDeadGameObjects();

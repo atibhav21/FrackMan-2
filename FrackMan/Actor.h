@@ -149,6 +149,7 @@ public:
     HardCoreProtester(StudentWorld* sw, int startX, int startY);
     virtual void doSomething();
     virtual bool trackFrackMan();
+    virtual void addGold();
 };
 
 class FrackMan: public Agent

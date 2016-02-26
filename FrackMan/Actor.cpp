@@ -1044,6 +1044,12 @@ bool HardCoreProtester::trackFrackMan()
     //return true; //TODO: Change according to spec
 }
 
+void HardCoreProtester::addGold()
+{
+    setStunState();
+    getStudentWorld()->playSound(SOUND_PROTESTER_FOUND_GOLD);
+}
+
 void HardCoreProtester::doSomething()
 {
     if(!isAlive())
