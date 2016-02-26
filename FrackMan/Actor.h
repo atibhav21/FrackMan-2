@@ -67,7 +67,7 @@ public:
     virtual bool annoy(unsigned int amount);
     virtual bool canPickThingsUp() const ;
     virtual bool canMoveInDirection(Direction d);
-    virtual void moveInDirection();
+    virtual bool moveInDirection();
 private:
     int m_hitPoints;
 };
@@ -81,13 +81,13 @@ public:
     virtual bool annoy(unsigned int amount);
     virtual void addGold();
     virtual bool huntsFrackMan() const {return true; }
-    virtual bool canAnnoyFrackMan() const;
+    bool canAnnoyFrackMan() const;
     
-    virtual int getGold() { return m_gold; }
+    int getGold() { return m_gold; }
     
-    virtual bool isViableDirection(Direction d) ;
+    bool isViableDirection(Direction d) ;
     
-    virtual void changeDirection();
+    void changeDirection();
     
     // Set state to having given up protest
     virtual void setLeaveOilFieldState() ;
@@ -103,14 +103,12 @@ public:
     
     void getPerpendicularDirections(Direction& d1, Direction& d2);
     
-    virtual void setStunState();
+    void setStunState();
     
     void move();
     
     virtual bool trackFrackMan() = 0;
     
-    // Set number of ticks until next move
-    void setTicksToNextMove();
 private:
     int m_gold;
     bool leaveOilFieldState;
@@ -132,14 +130,6 @@ public:
     RegularProtester(StudentWorld* world, int startX, int startY);
     virtual void doSomething();
     virtual bool trackFrackMan() ;
-    
-    //virtual bool canAnnoyFrackMan() const;
-    
-    
-private:
-    
-    
-    
     
 };
 
@@ -241,7 +231,7 @@ private:
 };
 
 
-//pickable only by the frackman
+//pickable by frackMan
 class GoldNugget: public Goodie
 {
 public:

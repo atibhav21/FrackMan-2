@@ -508,7 +508,7 @@ bool Agent::canMoveInDirection(Direction d)
     return false;
 }
 
-void Agent::moveInDirection()
+bool Agent::moveInDirection()
 {
     int x = getX();
     int y = getY();
@@ -518,7 +518,7 @@ void Agent::moveInDirection()
         if(moveToIfPossible(x, y-1) == true)
         {
             moveTo(x, y-1);
-            
+            return true;
         }
     }
     else if(directionToMoveIn == up )
@@ -526,7 +526,7 @@ void Agent::moveInDirection()
         if(moveToIfPossible(x, y+1) == true)
         {
             moveTo(x , y+1);
-            
+            return true;
         }
     }
     else if(directionToMoveIn == left)
@@ -534,6 +534,7 @@ void Agent::moveInDirection()
         if(moveToIfPossible(x-1, y)== true)
         {
             moveTo(x-1, y);
+            return true;
         }
     }
     else if(directionToMoveIn == right)
@@ -541,8 +542,10 @@ void Agent::moveInDirection()
         if(moveToIfPossible(x+1, y)== true)
         {
             moveTo(x+1, y);
+            return true;
         }
     }
+    return false;
 }
 
 //frackMan constructor and methods
@@ -760,10 +763,36 @@ void Protester::addGold()
 
 void Protester::followExitPath()
 {
+    //TODO: CHECK GENERATION CO-ORDINATES. PROTESTER SOMETIMES WALKS ON DIRT
     Direction d = getDirection();
-    getStudentWorld()->getExitDirection(this, getX(), getY(), d);
+    int prevx, prevy;
+    if(d == left)
+    {
+        prevx = getX()+1;
+        prevy = getY();
+    }
+    else if(d == right)
+    {
+        prevx = getX()-1;
+        prevy = getY();
+    }
+    else if(d == up)
+    {
+        prevx = getX();
+        prevy = getY()-1;
+    }
+    else if(d == down)
+    {
+        prevx = getX();
+        prevy = getY()+1;
+    }
+    getStudentWorld()->getExitDirection(this, getX(), getY(),prevx, prevy, d);
     setDirection(d);
     //d is passed by reference so value is changed
+    /*if(moveInDirection() == false)
+    {
+        changeDirection();
+    }*/
     moveInDirection();
 }
 

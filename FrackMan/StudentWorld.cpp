@@ -17,15 +17,8 @@ StudentWorld::StudentWorld(string assetDir)
 {
     currentLevel = getLevel();
     
-    for(int i = 0; i<64; i++)
-    {
-        for(int j = 0; j<64; j++)
-        {
-            exitGrid[i][j].count = 1000; //since count of any point on grid cannot be greater than 1000;
-        }
-    }
     
-    ticksSinceLastProtester = 0;
+    
 }
 
 
@@ -41,10 +34,20 @@ StudentWorld::StudentWorld(string assetDir)
  */
 int StudentWorld::init()
 {
+    dirtRemovedSinceLastUpdate = 0;
     currentLevel = getLevel();
     ticksSinceLastProtester = 0;
     protestersOnField = 0;
     frackManPointer = new FrackMan(30,60, this);
+    
+    for(int i = 0; i<64; i++)
+    {
+        for(int j = 0; j<64; j++)
+        {
+            exitGrid[i][j].count = 1000; //since count of any point on grid cannot be greater than 1000;
+        }
+    }
+    
     for(int i = 0; i<VIEW_WIDTH; i++) //x direction
     {
         for(int j = 0; j<VIEW_HEIGHT; j++) //y direction
@@ -91,7 +94,7 @@ double StudentWorld::distance(int x1, int y1, int x2, int y2) const
 
 bool StudentWorld::dirtAt(int x, int y) const
 {
-    if(x> 60 || y> 60)
+    if(x> 60 || y> 60 || x<0 || y< 0)
         return false;
     if(dirtArray[x][y]->isAlive() ) //|| dirtArray[x][y]->isVisible())
     {
@@ -243,30 +246,52 @@ GraphObject::Direction StudentWorld::getPreviousdirection(GraphObject::Direction
     return GraphObject::right; //code should never reach this point
 }
 
-void StudentWorld::getExitDirection(Actor*a, int x, int y, GraphObject::Direction& d)
+void StudentWorld::getExitDirection(Actor*a, int x, int y, int prevx, int prevy, GraphObject::Direction& d)
 {
     //GraphObject::Direction prevDir = getPreviousdirection(d); //this is the previous direction of object
     //GraphObject::Direction currentDirection = d;
-    if(exitGrid[x-1][y].count < exitGrid[x][y].count && canActorMoveTo(a, x-1, y))
+    if(exitGrid[x-1][y].count < exitGrid[x][y].count && canActorMoveTo(a, x-1, y) && (x-1 != prevx && y!= prevy))
     {
             d = GraphObject::left;
+            return;
     }
-    else if(exitGrid[x+1][y].count < exitGrid[x][y].count && canActorMoveTo(a, x+1, y))
+    else if(exitGrid[x+1][y].count < exitGrid[x][y].count && canActorMoveTo(a, x+1, y) && (x+1 != prevy && y!= prevy))
     {
         d = GraphObject::right;
+        return;
     }
-    else if(exitGrid[x][y-1].count< exitGrid[x][y].count && canActorMoveTo(a, x, y-1))
+    else if(exitGrid[x][y-1].count< exitGrid[x][y].count && canActorMoveTo(a, x, y-1) && (y-1 != prevy && x!= prevx))
     {
         d = GraphObject::down;
-
+        return;
     }
-    else if(exitGrid[x][y+1].count < exitGrid[x][y].count && canActorMoveTo(a, x, y+1))
+    else if(exitGrid[x][y+1].count < exitGrid[x][y].count && canActorMoveTo(a, x, y+1) && (y+1 != prevy && x!= prevx))
     {
         d = GraphObject::up;
+        return;
     }
-    else
+    
+    /*if(canActorMoveTo(a, x-1, y))
     {
-        //d = currentDirection;
+        d = GraphObject::left;
+        return;
+    }
+    
+    else if(canActorMoveTo(a, x+1, y))
+    {
+        d = GraphObject::right;
+        return;
+    }
+    else if(canActorMoveTo(a, x, y+1))
+    {
+        d = GraphObject::up;
+        return;
+    }
+    else if(canActorMoveTo(a, x, y-1))
+    {
+        d = GraphObject::down;
+        return;
+    }
         /*while(d == prevDir)
         {
             int x = rand()% 4;
@@ -287,7 +312,7 @@ void StudentWorld::getExitDirection(Actor*a, int x, int y, GraphObject::Directio
                 d = GraphObject::down;
             }
         }*/
-    }
+    //}
     
     
     //none of these options are viable so pick a random direction
@@ -358,6 +383,7 @@ void StudentWorld::removeDirt(int startX, int startY, int endX, int endY)
                 dirtArray[i][j]->setAlive(false);
                 soundToBePlayed = true;
                 updateSelectiveGrid(i, j);
+                dirtRemovedSinceLastUpdate++;
             }
         }
     }
@@ -397,8 +423,7 @@ void StudentWorld::addNewItem()
             int x, y;
             do
             {
-                //TODO: FIX
-                x = rand()%VIEW_WIDTH;
+                x = rand()%VIEW_WIDTH - 4;
                 y = rand()% (VIEW_HEIGHT - 4);
                 
             }while(noDirt(x, y) == false || checkEucDistance(x, y) == false);
@@ -857,6 +882,11 @@ int StudentWorld::move()
     }
     addNewItem();
     
+    if(dirtRemovedSinceLastUpdate>= 200)
+    {
+        updateExitGrid();
+        dirtRemovedSinceLastUpdate = 0;
+    }
     
     addProtester();
     

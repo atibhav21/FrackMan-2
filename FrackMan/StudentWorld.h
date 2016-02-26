@@ -88,7 +88,7 @@ public:
     
     double getFrackManDistance(int x, int y) const;
     
-    void getExitDirection(Actor* a, int x, int y, GraphObject::Direction& d);
+    void getExitDirection(Actor* a, int x, int y, int , int, GraphObject::Direction& d);
     
     //add barrels to the oil field
     void addBarrels();
@@ -145,6 +145,7 @@ private:
         bool visited = false;
     };
 
+    int dirtRemovedSinceLastUpdate;
     int ticksSinceLastProtester;
     int protestersOnField;
     int currentLevel;
