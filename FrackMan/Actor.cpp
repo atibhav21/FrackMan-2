@@ -176,14 +176,6 @@ Boulder::Boulder(int x, int y, StudentWorld* sw)
     stableState = true;
     waitingState = false;
     fallingState = false;
-    centerX = getX() + 2.0;
-    centerY = getY() + 2.0;
-}
-
-void Boulder::getCenter(double& x, double& y)
-{
-    x = centerX;
-    y = centerY;
 }
 
 bool Boulder::checkDirtUnder(int x, int y)
@@ -227,6 +219,7 @@ void Boulder::doSomething()
     
     if(getStudentWorld()->checkProtesterDistance(this, x, y, 500,10) == true)
     {
+        getStudentWorld()->updateSelectiveGrid(getX(), getY());
         setAlive(false);
         setVisible(false);
         return;
@@ -515,33 +508,55 @@ bool Agent::moveInDirection()
     Direction directionToMoveIn = getDirection();
     if(directionToMoveIn == down)
     {
+        if(y == 0)
+        {
+            moveTo(x, y);
+        }
         if(moveToIfPossible(x, y-1) == true)
         {
-            moveTo(x, y-1);
+            
+                moveTo(x, y-1);
+            
             return true;
         }
     }
     else if(directionToMoveIn == up )
     {
+        if( y == 60)
+        {
+            moveTo(x, y);
+        }
         if(moveToIfPossible(x, y+1) == true)
         {
-            moveTo(x , y+1);
+            
+                moveTo(x , y+1);
+        
+            
             return true;
         }
     }
     else if(directionToMoveIn == left)
     {
+        if(x == 0)
+        {
+            moveTo(x, y);
+        }
         if(moveToIfPossible(x-1, y)== true)
         {
+            
             moveTo(x-1, y);
             return true;
         }
     }
     else if(directionToMoveIn == right)
     {
+        if( x == 60)
+        {
+            moveTo(x, y);
+        }
         if(moveToIfPossible(x+1, y)== true)
         {
-            moveTo(x+1, y);
+                moveTo(x+1, y);
             return true;
         }
     }
@@ -591,7 +606,6 @@ void FrackMan::pressKey(int key)
     {
         movePending = false;
     }
-    
     if(key == 'Z' || key == 'z')
     {
         if(getSonarCharges()>0)
@@ -677,11 +691,12 @@ Protester::Protester(StudentWorld* world, int startX, int startY, int imageID, u
     lastPerpendicularTurn = 0;
     leaveOilFieldState = false;
     stunState = false;
+    doesDirectionNeedToBeChanged = true;
 }
 
 bool Protester::canAnnoyFrackMan() const
 {
-    if(ticksToWait >0 || leaveOilFieldState || stunState == true)//|| restingTicks > 0)
+    if(ticksToWait >0 || leaveOilFieldState || stunState == true || ticksSinceLastShout<15)//|| restingTicks > 0)
     {
         return false;
     }
@@ -696,8 +711,13 @@ bool Protester::annoy(unsigned int amt)
         return false;
     }
     
+    if(leaveOilFieldState == true)
+    {
+        return false;
+    }
+    
     m_hitPoints-= amt;
-    if(m_hitPoints<=0)
+    if(m_hitPoints<=0 )
     {
         getStudentWorld()->playSound(SOUND_PROTESTER_GIVE_UP);
         getStudentWorld()->increaseScore(100);
@@ -764,6 +784,7 @@ void Protester::addGold()
 void Protester::followExitPath()
 {
     //TODO: CHECK GENERATION CO-ORDINATES. PROTESTER SOMETIMES WALKS ON DIRT
+    // THEY SOMETIMES MOVE IN SAME DIRECTION. WHEN DECREASING COUNT IS COMPLETELY OPPOSITE OF THEIR CURRENT DIRECTION. FIX THAT
     Direction d = getDirection();
     int prevx, prevy;
     if(d == left)
@@ -786,7 +807,7 @@ void Protester::followExitPath()
         prevx = getX();
         prevy = getY()+1;
     }
-    getStudentWorld()->getExitDirection(this, getX(), getY(),prevx, prevy, d);
+    getStudentWorld()->getExitDirection(this, getX(), getY(),prevx, prevy, d, doesDirectionNeedToBeChanged);
     setDirection(d);
     //d is passed by reference so value is changed
     /*if(moveInDirection() == false)

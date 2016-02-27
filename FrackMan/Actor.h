@@ -122,6 +122,7 @@ private:
     int lastPerpendicularTurn;
     int stepsToMove;
     int level;
+    bool doesDirectionNeedToBeChanged;
 };
 
 class RegularProtester : public Protester
@@ -148,7 +149,7 @@ public:
     FrackMan(int x, int y, StudentWorld* sw);
     virtual void doSomething();
     virtual bool canDigThroughDirt() const {return true;}
-    virtual bool canActorsPassThroughMe() const {return false; }
+    //virtual bool canActorsPassThroughMe() const {return false; }
     virtual bool canPickThingsUp() const {return true;}
     
     int getHitPoints()              { return hitPoints;}
@@ -194,15 +195,12 @@ public:
     virtual bool canDigThroughDirt() const {return false;}
     virtual bool canAnnoyFrackMan() const;
     virtual int getAnnoyancePoints() const {return 10;}
-    void getCenter( double& x, double &y) ;
 private:
     bool checkDirtUnder(int x, int y);
     bool stableState;
     bool waitingState;
     bool fallingState;
     int tickCount;
-    double centerX;
-    double centerY;
     
 };
 
@@ -222,7 +220,7 @@ class Goodie: public Actor
 public:
     Goodie(int imageID, int x, int y, StudentWorld* sw, Direction dir, double size, unsigned int depth, FrackMan* fm , bool initiallyPickUpAble);
     virtual void doSomething() {}
-    virtual int activate(bool pickUpAble, int SoundID, int pointsIncrease);
+    int activate(bool pickUpAble, int SoundID, int pointsIncrease);
     FrackMan* getFrackMan();
     virtual ~Goodie() {}
 private:
