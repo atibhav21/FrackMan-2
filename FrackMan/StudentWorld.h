@@ -115,7 +115,7 @@ public:
     void removeDeadGameObjects();
     
     //reset the exit grid to its initial state
-    void resetExitGrid();
+    void resetFrackManGrid();
     
     //update the grid only for location x, y
     void updateSelectiveGrid(int x, int y);
@@ -128,6 +128,10 @@ public:
     
     //finds coordinates which are completely covered by dirt
     void findCoordinates(int &x, int &y);
+    
+    GraphObject::Direction forHardCoreProtester(Actor* a);
+    
+    void setUpFrackManGrid();
 
     virtual ~StudentWorld();
 private:
@@ -141,7 +145,7 @@ private:
     
     struct countGrid
     {
-        int count;
+        int count = 1000;
         bool visited = false;
     };
     
@@ -155,6 +159,7 @@ private:
     vector<Actor*> objects;
     FrackMan* frackManPointer;
     countGrid exitGrid[VIEW_WIDTH][VIEW_HEIGHT];
+    countGrid frackManGrid[VIEW_WIDTH][VIEW_HEIGHT];
     Dirt* dirtArray[VIEW_WIDTH][VIEW_HEIGHT];
 };
 

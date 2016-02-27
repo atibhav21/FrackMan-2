@@ -44,7 +44,7 @@ int StudentWorld::init()
     {
         for(int j = 0; j<64; j++)
         {
-            exitGrid[i][j].count = 99; //since count of any point on grid cannot be greater than 1000;
+            exitGrid[i][j].count = 1000; //since count of any point on grid cannot be greater than 1000;
         }
     }
     
@@ -178,14 +178,14 @@ void StudentWorld::updateSelectiveGrid(int x, int y)
     }
 }
 
-void StudentWorld::resetExitGrid()
+void StudentWorld::resetFrackManGrid()
 {
     for(int i = 0; i< 64; i++)
     {
         for(int j = 0; j< 64; j++)
         {
-            exitGrid[i][j].visited = false;
-            exitGrid[i][j].count = 1000;
+            frackManGrid[i][j].visited = false;
+            frackManGrid[i][j].count = 1000;
         }
     }
 }
@@ -557,7 +557,6 @@ string StudentWorld::formatText(int score, int level, int lives, int health, int
     string livesText = "Lives: 0";
     livesText[7] = (char)(lives+'0');
     
-    //TODO: Health field
     string healthText = "Hlth:  00%";
     if(health!= 0)
         formatField(8, 6, health*10, healthText);
@@ -723,6 +722,7 @@ void StudentWorld::moveFrackman()
     int frackX = frackManPointer->getX();
     int frackY = frackManPointer->getY();
     removeDirt(frackX, frackY, frackX+3, frackY+3);
+    resetFrackManGrid();
 }
 
 void StudentWorld::sonarChargeUsed()
@@ -739,7 +739,6 @@ void StudentWorld::sonarChargeUsed()
 
 void StudentWorld::squirtUsed(GraphObject::Direction d)
 {
-    //TODO: CHECK FOR CORRECT INITIALIZATION POSITION
     playSound(SOUND_PLAYER_SQUIRT);
     Actor* newSquirt;
     if(d == GraphObject::left)
@@ -854,13 +853,80 @@ bool StudentWorld::facingFrackMan(Actor* a) const
     return false;
 }
 
+void StudentWorld::setUpFrackManGrid()
+{
+    int M = 16+currentLevel*2;
+    queue<Cell> m_queue;
+    Cell x(0, frackManPointer->getX(), frackManPointer->getY());
+    m_queue.push(x);
+    while(!m_queue.empty() && m_queue.front().count <= M)
+    {
+        Cell m = m_queue.front();
+        m_queue.pop();
+        frackManGrid[m.x][m.y].count = m.count;
+        frackManGrid[m.x][m.y].visited = true;
+        if(isEmpty(m.x-1, m.y) && frackManGrid[m.x-1][m.y].visited == false)
+        {
+            Cell k(m.count+1, m.x-1, m.y);
+            m_queue.push(k);
+        }
+        if(isEmpty(m.x+1, m.y) && frackManGrid[m.x+1][m.y].visited == false)
+        {
+            Cell k(m.count+1, m.x+1, m.y);
+            m_queue.push(k);
+        }
+        if(isEmpty(m.x, m.y+1) && frackManGrid[m.x][m.y+1].visited == false)
+        {
+            Cell k(m.count+1, m.x, m.y+1);
+            m_queue.push(k);
+        }
+        if(isEmpty(m.x, m.y-1) && frackManGrid[m.x][m.y-1].visited == false)
+        {
+            Cell k(m.count+1, m.x, m.y-1);
+            m_queue.push(k);
+        }
+    }
+}
+
+GraphObject::Direction StudentWorld::forHardCoreProtester(Actor* a)
+{
+    
+    int ax = a->getX();
+    int ay = a->getY();
+    if(frackManGrid[ax][ay].count >= 1000)
+    {
+        return GraphObject::none;
+    }
+    else
+    {
+        if(frackManGrid[ax-1][ay].count <= exitGrid[ax][ay].count && canActorMoveTo(a, ax-1, ay))
+        {
+            return GraphObject::left;
+        }
+        else if(exitGrid[ax+1][ay].count <= exitGrid[ax][ay].count && canActorMoveTo(a, ax+1, ay) )
+        {
+           return GraphObject::right;
+    
+        }
+        else if(exitGrid[ax][ay-1].count<= exitGrid[ax][ay].count && canActorMoveTo(a, ax, ay-1))
+        {
+            return GraphObject::down;
+        }
+        else if(exitGrid[ax][ay+1].count <= exitGrid[ax][ay].count && canActorMoveTo(a, ax, ay+1) )
+        {
+            return GraphObject::up;
+        }
+    }
+    return GraphObject::none;
+}
+
 bool StudentWorld::checkLineOfSight(Actor* a)
 {
     int fmx = frackManPointer->getX();
     int fmy = frackManPointer->getY();
     int ax = a->getX();
     int ay = a->getY();
-    if(fabs(fmx-ax) <= 4.0 || fabs(fmy-ay) <= 4.0) //TODO: Change to <=4.0
+    if(fabs(fmx-ax) <= 4.0 || fabs(fmy-ay) <= 4.0) 
     {
         if(distance(fmx, fmy, ax, ay)>4.0)
         {
@@ -947,6 +1013,8 @@ int StudentWorld::move()
         }
     }
     addNewItem();
+    
+    setUpFrackManGrid();
     
     if(dirtRemovedSinceLastUpdate>= 100)
     {

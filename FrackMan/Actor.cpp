@@ -98,7 +98,6 @@ void Squirt::doSomething()
         setAlive(false);
         return;
     }
-    //TODO: Check for protestor, dirt and boulder and edge of grid
     
     int x = getX();
     int y = getY();
@@ -234,7 +233,7 @@ void Boulder::doSomething()
         return;
     }
     
-    if(getStudentWorld()->checkProtesterDistance(this, x, y, 500 ,10) == true) //TODO: Check if 10 is correct number
+    if(getStudentWorld()->checkProtesterDistance(this, x, y, 500 ,10) == true)
     {
         setAlive(false);
         setVisible(false);
@@ -255,7 +254,6 @@ void Boulder::doSomething()
     
     if(fallingState == true)
     {
-        //TODO: change implementation to can move to
         if(checkDirtUnder(x, y) == true || x == 0)
         {
             fallingState = false;
@@ -305,7 +303,6 @@ int Goodie::activate(bool permanent, int SoundID, int pointsIncrease)
         return 4;
     }
     
-    //TODO: DEFINE PICKUPABLE FUNCTION IN CLASS GOODIE
     double distance = sqrt( pow(FMP->getX() - getX(), 2) + pow(FMP->getY()-getY(), 2) );
     if(permanent == true && isPickUpAble && distance<=3.0) //Change Made
     {
@@ -705,7 +702,6 @@ bool Protester::canAnnoyFrackMan() const
 
 bool Protester::annoy(unsigned int amt)
 {
-    //TODO: Check if Protester is annoyed by Boulder or by Squirt
     if(amt == 0)
     {
         return false;
@@ -783,8 +779,6 @@ void Protester::addGold()
 
 void Protester::followExitPath()
 {
-    //TODO: CHECK GENERATION CO-ORDINATES. PROTESTER SOMETIMES WALKS ON DIRT
-    // THEY SOMETIMES MOVE IN SAME DIRECTION. WHEN DECREASING COUNT IS COMPLETELY OPPOSITE OF THEIR CURRENT DIRECTION. FIX THAT
     Direction d = getDirection();
     int prevx, prevy;
     if(d == left)
@@ -874,7 +868,7 @@ void Protester::move()
         }
         return;
     }
-    //TODO: Protester does not stun
+
     
     if(leaveOilFieldState == false && getStudentWorld()->getFrackManDistance(getX(), getY())<4.0 && ticksSinceLastShout >= 15 && getStudentWorld()->facingFrackMan(this) == true && stunState == false)/*restingTicks<= 0*/
     {
@@ -894,6 +888,7 @@ void Protester::move()
     
     if(trackFrackMan() == true)
     {
+        moveInDirection();
         return;
     }
     
@@ -964,8 +959,6 @@ void Protester::move()
     
     moveInDirection();
 }
-
-//TODO: Keep track of where the last co-ordinate was and if stuck then move in a direction in which it was possible
 
 bool Protester::isViableDirection(Direction d) 
 {
@@ -1045,7 +1038,7 @@ bool Protester::isPerpendicular(Direction d1, Direction d2) const
 }
 
 RegularProtester::RegularProtester(StudentWorld* world, int startX, int startY)
-:Protester(world, startX, startY, IID_PROTESTER, 5, 20) //TODO: check if 20 is correct
+:Protester(world, startX, startY, IID_PROTESTER, 5, 20)
 {
      //generates a number between 8 and 60 inclusive
     setVisible(true);
@@ -1090,7 +1083,13 @@ HardCoreProtester::HardCoreProtester(StudentWorld* sw, int x, int y)
 
 bool HardCoreProtester::trackFrackMan()
 {
-    return false;
+    Direction d = getStudentWorld()->forHardCoreProtester(this);
+    if(d == none)
+    {
+        return false;
+    }
+    setDirection(d);
+    return true;
     //return true; //TODO: Change according to spec
 }
 
